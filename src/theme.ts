@@ -1,9 +1,17 @@
-export type VisualTheme = 'metal' | 'default';
+export type VisualTheme = 'metal' | 'default' | 'forest';
 
 export const THEME_STORAGE_KEY = 'lodgeMusicTheme';
 
+const THEME_META_COLORS: Record<VisualTheme, string> = {
+  metal: '#0b0e14',
+  default: '#0f141c',
+  forest: '#0c140e'
+};
+
 export function normalizeTheme(value: string | null | undefined): VisualTheme {
-  return value === 'default' ? 'default' : 'metal';
+  if (value === 'default') return 'default';
+  if (value === 'forest' || value === 'pastel') return 'forest';
+  return 'metal';
 }
 
 export function getStoredTheme(): VisualTheme {
@@ -27,8 +35,15 @@ export function applyVisualTheme(theme: VisualTheme, persist = true): void {
   const resolved = normalizeTheme(theme);
   if (resolved === 'metal') {
     document.documentElement.setAttribute('data-theme', 'metal');
+  } else if (resolved === 'forest') {
+    document.documentElement.setAttribute('data-theme', 'forest');
   } else {
     document.documentElement.removeAttribute('data-theme');
+  }
+
+  const metaThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.content = THEME_META_COLORS[resolved];
   }
 
   if (persist) {

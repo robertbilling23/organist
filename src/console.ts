@@ -8,14 +8,27 @@ import {
   subscribeAuth
 } from './firebase';
 import {
+  createTrack,
+  deleteTrack,
   migrateLegacyConfiguration,
   normalizeColor,
   normalizeLyrics,
+  reorderTracks,
   subscribeToSets,
-  subscribeToTracks
+  subscribeToTracks,
+  updateTrack
 } from './store';
 import { initThemeSwitcher } from './theme';
-import type { LegacySetEntry, LegacyTrackEntry, SetConfig, TrackButton } from './types';
+import {
+  BLUEPRINT_LIMITS,
+  TRACK_COLOR_META,
+  TRACK_COLORS,
+  type LegacySetEntry,
+  type LegacyTrackEntry,
+  type SetConfig,
+  type TrackButton,
+  type TrackColor
+} from './types';
 
 declare global {
   interface Navigator {
@@ -63,6 +76,16 @@ let currentTrackIndex = 0;
 
 let currentUser: User | null = null;
 let isAdmin = false;
+
+let isEditMode = false;
+let dirtyInlineEdits = false;
+let pendingInlineAction: (() => void) | null = null;
+let pendingInlineDeleteConfirm = false;
+let inlineDragSrcIndex: number | null = null;
+let isReorderingInline = false;
+let availableConsoleAudioFiles: string[] = [];
+let inlinePreviewAudio: HTMLAudioElement | null = null;
+let inlinePreviewingFile: string | null = null;
 
 let unsubscribeSets: (() => void) | null = null;
 let unsubscribeTracks: (() => void) | null = null;
@@ -732,6 +755,14 @@ function fadeCurrentTrack(): void {
 }
 
 function handleTrackSelection(index: number): void {
+  if (isEditMode) {
+    if (index === currentTrackIndex) return;
+    requestGuardedEditAction(() => {
+      selectTrackInEditMode(index);
+    });
+    return;
+  }
+
   const clickedChip = byId<HTMLDivElement>(`chip-${index}`);
   if (clickedChip && clickedChip.classList.contains('fading-now')) return;
 
@@ -759,7 +790,7 @@ function buildPlaylistGrid(forceDisabledState: boolean): void {
   grid.innerHTML = '';
 
   if (tracks.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: var(--text-dim);">No buttons in this set yet.${isAdmin ? ' Tap ✏️ Edit Set above to add buttons.' : ''}</div>`;
+    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: var(--text-dim);">No buttons in this set yet.${canEditActiveSet() ? ' Tap ✏️ Edit below or 🎛️ Studio above to add buttons.' : ''}</div>`;
     return;
   }
 
@@ -773,6 +804,10 @@ function buildPlaylistGrid(forceDisabledState: boolean): void {
       chip.className = `nav-chip color-${chosenColor} not-loaded`;
     } else {
       chip.className = `nav-chip color-${chosenColor}`;
+    }
+
+    if (isEditMode) {
+      chip.classList.add('edit-mode-chip');
     }
 
     if (index === currentTrackIndex) {
@@ -793,6 +828,41 @@ function buildPlaylistGrid(forceDisabledState: boolean): void {
     chip.onclick = () => {
       handleTrackSelection(index);
     };
+
+    if (isEditMode) {
+      chip.draggable = true;
+      chip.addEventListener('dragstart', (e) => {
+        inlineDragSrcIndex = index;
+        chip.classList.add('dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(index));
+        }
+      });
+      chip.addEventListener('dragend', () => {
+        chip.classList.remove('dragging');
+        inlineDragSrcIndex = null;
+        document.querySelectorAll('.nav-chip.drag-over').forEach((el) => el.classList.remove('drag-over'));
+      });
+      chip.addEventListener('dragover', (e) => {
+        if (inlineDragSrcIndex === null || inlineDragSrcIndex === index) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        chip.classList.add('drag-over');
+      });
+      chip.addEventListener('dragleave', () => {
+        chip.classList.remove('drag-over');
+      });
+      chip.addEventListener('drop', (e) => {
+        e.preventDefault();
+        chip.classList.remove('drag-over');
+        const fromIdx = inlineDragSrcIndex;
+        inlineDragSrcIndex = null;
+        if (fromIdx === null || fromIdx === index) return;
+        void reorderInlineTracks(fromIdx, index);
+      });
+    }
+
     grid.appendChild(chip);
   });
 }
@@ -1084,23 +1154,32 @@ function switchCeremonialSet(set: SetConfig, isInitialBoot: boolean): void {
       buildPlaylistGrid(firstLoad);
 
       if (tracks.length > 0) {
-        if (!isPlaying) {
+        if (isEditMode) {
+          if (dirtyInlineEdits) {
+            applyInlineChipPreview();
+            const heading = byId<HTMLSpanElement>('inlineEditorHeading');
+            const activeTitle = (byId<HTMLInputElement>('inlineEditTitle')?.value || '').trim() || tracks[currentTrackIndex]?.title || 'Button';
+            if (heading) heading.textContent = `Edit #${currentTrackIndex + 1}: ${activeTitle}`;
+            updateInlineReorderButtons();
+          } else {
+            syncInlineEditorToCurrentTrack();
+          }
+          if (!isPlaying) {
+            syncPlayModeDisplay(tracks[currentTrackIndex]);
+          }
+        } else if (!isPlaying) {
           loadTrack(currentTrackIndex);
         } else {
-          const active = tracks[currentTrackIndex];
-          if (active) {
-            const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
-            const titleEl = byId<HTMLSpanElement>('trackTitle');
-            const cueElNow = byId<HTMLSpanElement>('cueText');
-            if (ticker) ticker.innerText = active.title;
-            if (titleEl) titleEl.innerText = active.title;
-            if (cueElNow) cueElNow.innerText = active.cue || 'No special cues assigned.';
-            buildStaticTextPanel(active.lyrics || []);
-          }
+          syncPlayModeDisplay(tracks[currentTrackIndex]);
         }
         void cacheAllAudioToRAM();
       } else {
-        loadTrack(0);
+        if (isEditMode) {
+          syncInlineEditorToCurrentTrack();
+        }
+        if (!isPlaying) {
+          loadTrack(0);
+        }
       }
       firstLoad = false;
     },
@@ -1155,6 +1234,7 @@ async function loadLocalFallbackTracks(set: SetConfig): Promise<TrackButton[]> {
 }
 
 function navigateToHomeScreen(): void {
+  exitEditMode(true);
   if (fadeInterval) {
     clearInterval(fadeInterval);
     fadeInterval = null;
@@ -1196,6 +1276,7 @@ function navigateToHomeScreen(): void {
   window.history.pushState({}, '', window.location.pathname);
   byId<HTMLDivElement>('screenConsole')?.classList.remove('active-view');
   byId<HTMLDivElement>('screenHome')?.classList.add('active-view');
+  updateConsoleAdminEditButton();
   void updateOfflineDiskMetricDisplay();
   window.dispatchEvent(new Event('resize'));
 }
@@ -1211,8 +1292,8 @@ function getPublicShareBaseUrl(): string {
 async function shareLodgeMusicApp(): Promise<void> {
   const baseUrl = getPublicShareBaseUrl();
   const shareUrl = activeSet ? `${baseUrl}?set=${encodeURIComponent(activeSet.id)}` : baseUrl;
-  const shareTitle = activeSet ? `Lodge Music — ${activeSet.label}` : 'Lodge Music';
-  const shareText = 'Here is the Lodge Music app for running ceremonial audio straight from your phone or tablet.';
+  const shareTitle = activeSet ? `Digital Organist — ${activeSet.label}` : 'Digital Organist';
+  const shareText = 'Here is the Digital Organist app for running ceremonial audio straight from your phone or tablet.';
 
   try {
     if (navigator.clipboard?.writeText) {
@@ -1261,16 +1342,549 @@ function executePwaServiceCacheClear(): void {
   }, 150);
 }
 
-function updateConsoleAdminEditButton(): void {
-  const btn = byId<HTMLButtonElement>('btnConsoleEditSet');
-  if (!btn) return;
-  if (isAdmin && activeSet) {
-    btn.style.display = 'inline-flex';
+function canEditActiveSet(): boolean {
+  return isAdmin && Boolean(activeSet) && !activeSet!.id.startsWith('local_');
+}
+
+function syncPlayModeDisplay(active: TrackButton | undefined): void {
+  if (!active) return;
+  const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
+  const titleEl = byId<HTMLSpanElement>('trackTitle');
+  const filenameEl = byId<HTMLSpanElement>('trackFilenameReadout');
+  const cueElNow = byId<HTMLSpanElement>('cueText');
+  if (ticker) ticker.innerText = active.title;
+  if (titleEl) titleEl.innerText = active.title;
+  if (filenameEl) filenameEl.innerText = active.file.split('/').pop() || active.file;
+  if (cueElNow) cueElNow.innerText = active.cue || 'No special cues assigned.';
+  buildStaticTextPanel(active.lyrics || []);
+}
+
+function stopInlineAudioPreview(): void {
+  if (inlinePreviewAudio) {
+    inlinePreviewAudio.pause();
+    inlinePreviewAudio.currentTime = 0;
+    inlinePreviewAudio = null;
+  }
+  inlinePreviewingFile = null;
+  const previewBtn = byId<HTMLButtonElement>('btnInlinePreviewAudio');
+  if (previewBtn) {
+    previewBtn.innerText = '▶ Test';
+  }
+}
+
+function toggleInlineAudioPreview(): void {
+  const filePath = (byId<HTMLInputElement>('inlineEditFile')?.value || '').trim();
+  const previewBtn = byId<HTMLButtonElement>('btnInlinePreviewAudio');
+  if (!filePath) {
+    showToast('Enter an audio file path first.', 'error');
+    return;
+  }
+
+  if (inlinePreviewAudio && inlinePreviewingFile === filePath) {
+    stopInlineAudioPreview();
+    return;
+  }
+
+  stopInlineAudioPreview();
+  inlinePreviewingFile = filePath;
+  inlinePreviewAudio = new Audio(filePath);
+  if (previewBtn) previewBtn.innerText = '■ Stop';
+  inlinePreviewAudio.onended = () => {
+    stopInlineAudioPreview();
+  };
+  inlinePreviewAudio.onerror = () => {
+    stopInlineAudioPreview();
+    showToast(`Could not play ${filePath}. Verify the file exists.`, 'error');
+  };
+  void inlinePreviewAudio.play().catch((err) => {
+    stopInlineAudioPreview();
+    showToast(err instanceof Error ? err.message : 'Audio preview failed.', 'error');
+  });
+}
+
+async function fetchConsoleAudioFilesCatalog(): Promise<void> {
+  const discovered = new Set<string>();
+  try {
+    const res = await fetch('./api/audio-files');
+    if (res.ok) {
+      const data = (await res.json()) as { files?: string[] };
+      if (Array.isArray(data.files)) {
+        data.files.forEach((f) => discovered.add(f));
+      }
+    }
+  } catch {
+    // static hosting fallback below
+  }
+
+  if (discovered.size === 0) {
+    const jsonFiles = ['craft.json', 'ea.json', 'fc.json', 'mm.json', 'installation.json', 'filler.json', 'mark.json'];
+    await Promise.all(
+      jsonFiles.map(async (jf) => {
+        try {
+          const r = await fetch('./' + jf);
+          if (!r.ok) return;
+          const arr = (await r.json()) as Array<{ file?: string }>;
+          if (Array.isArray(arr)) {
+            arr.forEach((item) => {
+              if (item && typeof item.file === 'string' && item.file.trim()) {
+                discovered.add(item.file.trim());
+              }
+            });
+          }
+        } catch {
+          // ignore
+        }
+      })
+    );
+  }
+
+  tracks.forEach((t) => {
+    if (t.file) discovered.add(t.file);
+  });
+
+  availableConsoleAudioFiles = Array.from(discovered).sort((a, b) => a.localeCompare(b));
+  const datalist = byId<HTMLDataListElement>('consoleAudioFilesDatalist');
+  if (datalist) {
+    datalist.innerHTML = '';
+    availableConsoleAudioFiles.forEach((f) => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      datalist.appendChild(opt);
+    });
+  }
+
+  const picker = byId<HTMLSelectElement>('inlineAudioPicker');
+  if (picker) {
+    const currentFile = byId<HTMLInputElement>('inlineEditFile')?.value || '';
+    picker.innerHTML = '<option value="">-- Pick an existing file in /audio --</option>';
+    availableConsoleAudioFiles.forEach((f) => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      opt.textContent = f.replace(/^audio\//, '');
+      picker.appendChild(opt);
+    });
+    picker.value = availableConsoleAudioFiles.includes(currentFile) ? currentFile : '';
+  }
+}
+
+function renderInlineColorSwatches(): void {
+  const container = byId<HTMLDivElement>('inlineColorSwatches');
+  if (!container) return;
+  container.innerHTML = '';
+
+  TRACK_COLORS.forEach((color) => {
+    const meta = TRACK_COLOR_META[color];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `inline-color-btn color-${color}`;
+    btn.dataset.color = color;
+    btn.textContent = meta.label;
     btn.onclick = () => {
-      window.location.href = `./edit.html?set=${encodeURIComponent(activeSet!.id)}`;
+      setInlineActiveColor(color);
+      applyInlineChipPreview();
+      setInlineSaveStatus('dirty');
     };
+    container.appendChild(btn);
+  });
+}
+
+function getInlineSelectedColor(): TrackColor {
+  const active = document.querySelector<HTMLButtonElement>('#inlineColorSwatches .inline-color-btn.active');
+  return normalizeColor(active?.dataset.color || 'blue');
+}
+
+function setInlineActiveColor(color: TrackColor): void {
+  document.querySelectorAll<HTMLButtonElement>('#inlineColorSwatches .inline-color-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.color === color);
+  });
+}
+
+function setInlineSaveStatus(state: 'clean' | 'dirty' | 'saving' | 'saved'): void {
+  const statusEl = byId<HTMLSpanElement>('inlineSaveStatus');
+  const saveBtn = byId<HTMLButtonElement>('btnInlineSaveTrack');
+  if (!statusEl || !saveBtn) return;
+
+  if (state === 'dirty') {
+    dirtyInlineEdits = true;
+    statusEl.textContent = 'Unsaved';
+    statusEl.className = 'inline-save-status dirty';
+    saveBtn.disabled = tracks.length === 0;
+  } else if (state === 'saving') {
+    statusEl.textContent = 'Saving...';
+    statusEl.className = 'inline-save-status';
+    saveBtn.disabled = true;
+  } else if (state === 'saved') {
+    dirtyInlineEdits = false;
+    statusEl.textContent = '✓ Saved';
+    statusEl.className = 'inline-save-status saved';
+    saveBtn.disabled = true;
   } else {
-    btn.style.display = 'none';
+    dirtyInlineEdits = false;
+    statusEl.textContent = 'Synced';
+    statusEl.className = 'inline-save-status';
+    saveBtn.disabled = true;
+  }
+}
+
+function renderInlineDeleteConfirmUI(): void {
+  const delBtn = byId<HTMLButtonElement>('btnInlineDeleteTrack');
+  const confirmBox = byId<HTMLDivElement>('inlineDeleteConfirmBox');
+  if (!delBtn || !confirmBox) return;
+  if (pendingInlineDeleteConfirm) {
+    delBtn.style.display = 'none';
+    confirmBox.style.display = 'flex';
+  } else {
+    delBtn.style.display = tracks.length > 0 ? 'inline-flex' : 'none';
+    confirmBox.style.display = 'none';
+  }
+}
+
+function hideUnsavedPrompt(): void {
+  pendingInlineAction = null;
+  const banner = byId<HTMLDivElement>('inlineUnsavedBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+function requestGuardedEditAction(action: () => void): void {
+  if (!dirtyInlineEdits) {
+    action();
+    return;
+  }
+  pendingInlineAction = action;
+  const currentTrack = tracks[currentTrackIndex];
+  const msgEl = byId<HTMLSpanElement>('inlineUnsavedText');
+  if (msgEl) {
+    msgEl.textContent = currentTrack
+      ? `Save changes to "${currentTrack.title}" before leaving?`
+      : 'You have unsaved changes to this button.';
+  }
+  const banner = byId<HTMLDivElement>('inlineUnsavedBanner');
+  if (banner) banner.style.display = 'flex';
+}
+
+function applyInlineChipPreview(): void {
+  const chip = byId<HTMLDivElement>(`chip-${currentTrackIndex}`);
+  if (!chip) return;
+  const titleVal = (byId<HTMLInputElement>('inlineEditTitle')?.value || '').trim() || '(Untitled)';
+  const chosenColor = getInlineSelectedColor();
+  const track = tracks[currentTrackIndex];
+
+  let cls = `nav-chip color-${chosenColor}`;
+  if (track && audioErrors[track.file]) cls += ' missing-audio';
+  if (isEditMode) cls += ' edit-mode-chip';
+  if (fadeInterval) cls += ' fading-now';
+  else if (isPlaying) cls += ' playing-now';
+  else cls += ' active';
+
+  chip.className = cls;
+  chip.innerText = titleVal;
+  const words = titleVal.split(' ');
+  chip.style.fontSize = words.some((word) => word.length > 9) ? '1.05rem' : '';
+}
+
+function restoreChipFromSavedTrack(index: number): void {
+  const track = tracks[index];
+  const chip = byId<HTMLDivElement>(`chip-${index}`);
+  if (!track || !chip) return;
+
+  const chosenColor = track.color ? track.color.toLowerCase() : 'blue';
+  let cls = `nav-chip color-${chosenColor}`;
+  if (audioErrors[track.file]) cls += ' missing-audio';
+  if (isEditMode) cls += ' edit-mode-chip';
+  if (index === currentTrackIndex) {
+    if (fadeInterval) cls += ' fading-now';
+    else if (isPlaying) cls += ' playing-now';
+    else cls += ' active';
+  }
+  chip.className = cls;
+  chip.innerText = track.title;
+  const words = track.title.split(' ');
+  chip.style.fontSize = words.some((word) => word.length > 9) ? '1.05rem' : '';
+}
+
+function updateInlineReorderButtons(): void {
+  const earlierBtn = byId<HTMLButtonElement>('btnInlineMoveEarlier');
+  const laterBtn = byId<HTMLButtonElement>('btnInlineMoveLater');
+  if (earlierBtn) {
+    earlierBtn.disabled = isReorderingInline || tracks.length <= 1 || currentTrackIndex <= 0;
+  }
+  if (laterBtn) {
+    laterBtn.disabled = isReorderingInline || tracks.length <= 1 || currentTrackIndex >= tracks.length - 1;
+  }
+}
+
+async function reorderInlineTracks(fromIdx: number, toIdx: number): Promise<void> {
+  if (!activeSet || isReorderingInline) return;
+  if (fromIdx < 0 || fromIdx >= tracks.length || toIdx < 0 || toIdx >= tracks.length || fromIdx === toIdx) {
+    return;
+  }
+
+  const prevTracks = [...tracks];
+  const prevIndex = currentTrackIndex;
+  const selectedId = tracks[currentTrackIndex]?.id;
+
+  const reordered = [...tracks];
+  const [moved] = reordered.splice(fromIdx, 1);
+  reordered.splice(toIdx, 0, moved);
+
+  tracks = reordered.map((t, idx) => ({ ...t, order: idx }));
+  if (selectedId) {
+    const nextIdx = tracks.findIndex((t) => t.id === selectedId);
+    currentTrackIndex = nextIdx >= 0 ? nextIdx : 0;
+  }
+
+  isReorderingInline = true;
+  buildPlaylistGrid(false);
+  if (dirtyInlineEdits) {
+    applyInlineChipPreview();
+  }
+  const heading = byId<HTMLSpanElement>('inlineEditorHeading');
+  const currentTrack = tracks[currentTrackIndex];
+  if (heading && currentTrack) {
+    const displayTitle = dirtyInlineEdits
+      ? (byId<HTMLInputElement>('inlineEditTitle')?.value || '').trim() || currentTrack.title
+      : currentTrack.title;
+    heading.textContent = `Edit #${currentTrackIndex + 1}: ${displayTitle}`;
+  }
+  updateInlineReorderButtons();
+
+  try {
+    await reorderTracks(
+      activeSet.id,
+      tracks.map((t) => t.id)
+    );
+    showToast('Button order updated!', 'success');
+  } catch (err) {
+    tracks = prevTracks;
+    currentTrackIndex = prevIndex;
+    buildPlaylistGrid(false);
+    if (dirtyInlineEdits) {
+      applyInlineChipPreview();
+    } else {
+      syncInlineEditorToCurrentTrack();
+    }
+    showToast(err instanceof Error ? err.message : 'Failed to update button order.', 'error');
+  } finally {
+    isReorderingInline = false;
+    updateInlineReorderButtons();
+  }
+}
+
+function syncInlineEditorToCurrentTrack(): void {
+  const heading = byId<HTMLSpanElement>('inlineEditorHeading');
+  const emptyState = byId<HTMLDivElement>('inlineEmptyState');
+  const formBody = byId<HTMLDivElement>('inlineEditorFormBody');
+  const titleInput = byId<HTMLInputElement>('inlineEditTitle');
+  const fileInput = byId<HTMLInputElement>('inlineEditFile');
+  const picker = byId<HTMLSelectElement>('inlineAudioPicker');
+  const cueInput = byId<HTMLInputElement>('inlineEditCue');
+  const lyricsInput = byId<HTMLTextAreaElement>('inlineEditLyrics');
+
+  pendingInlineDeleteConfirm = false;
+  renderInlineDeleteConfirmUI();
+  hideUnsavedPrompt();
+
+  const track = tracks[currentTrackIndex];
+  if (!track) {
+    if (heading) heading.textContent = 'No Buttons';
+    if (emptyState) emptyState.style.display = 'flex';
+    if (formBody) formBody.style.display = 'none';
+    setInlineSaveStatus('clean');
+    updateInlineReorderButtons();
+    return;
+  }
+
+  if (emptyState) emptyState.style.display = 'none';
+  if (formBody) formBody.style.display = 'flex';
+  if (heading) heading.textContent = `Edit #${currentTrackIndex + 1}: ${track.title}`;
+
+  if (titleInput) titleInput.value = track.title;
+  if (fileInput) fileInput.value = track.file;
+  if (picker) picker.value = availableConsoleAudioFiles.includes(track.file) ? track.file : '';
+  if (cueInput) cueInput.value = track.cue;
+  if (lyricsInput) lyricsInput.value = (track.lyrics || []).join('\n');
+
+  setInlineActiveColor(track.color);
+  setInlineSaveStatus('clean');
+  updateInlineReorderButtons();
+}
+
+function selectTrackInEditMode(index: number): void {
+  if (index < 0 || index >= tracks.length) return;
+  stopInlineAudioPreview();
+  restoreChipFromSavedTrack(currentTrackIndex);
+  currentTrackIndex = index;
+
+  document.querySelectorAll('.nav-chip').forEach((c) => {
+    c.classList.remove('active');
+  });
+  const activeChip = byId<HTMLDivElement>(`chip-${index}`);
+  if (activeChip && !activeChip.classList.contains('playing-now') && !activeChip.classList.contains('fading-now')) {
+    activeChip.classList.add('active');
+  }
+
+  syncInlineEditorToCurrentTrack();
+}
+
+async function saveInlineTrackEdits(): Promise<boolean> {
+  const track = tracks[currentTrackIndex];
+  if (!activeSet || !track) return false;
+
+  const title = (byId<HTMLInputElement>('inlineEditTitle')?.value || '')
+    .trim()
+    .slice(0, BLUEPRINT_LIMITS.TRACK_TITLE_MAX);
+  const file = (byId<HTMLInputElement>('inlineEditFile')?.value || '')
+    .trim()
+    .slice(0, BLUEPRINT_LIMITS.TRACK_FILE_MAX);
+  const cue = (byId<HTMLInputElement>('inlineEditCue')?.value || '')
+    .trim()
+    .slice(0, BLUEPRINT_LIMITS.TRACK_CUE_MAX);
+  const lyricsText = byId<HTMLTextAreaElement>('inlineEditLyrics')?.value || '';
+  const color = getInlineSelectedColor();
+
+  if (!title) {
+    showToast('Button label cannot be empty.', 'error');
+    return false;
+  }
+  if (!file) {
+    showToast('Audio file path cannot be empty.', 'error');
+    return false;
+  }
+
+  const fileChanged = file !== track.file;
+  const lyrics = normalizeLyrics(lyricsText.split('\n'));
+  setInlineSaveStatus('saving');
+
+  try {
+    await updateTrack(activeSet.id, track.id, {
+      title,
+      color,
+      file,
+      cue,
+      lyrics
+    });
+    if (fileChanged) {
+      delete audioErrors[file];
+    }
+    tracks[currentTrackIndex] = { ...track, title, color, file, cue, lyrics };
+    restoreChipFromSavedTrack(currentTrackIndex);
+    syncPlayModeDisplay(tracks[currentTrackIndex]);
+    const heading = byId<HTMLSpanElement>('inlineEditorHeading');
+    if (heading) heading.textContent = `Edit #${currentTrackIndex + 1}: ${title}`;
+    setInlineSaveStatus('saved');
+    showToast('Button saved to cloud!', 'success');
+    return true;
+  } catch (err) {
+    setInlineSaveStatus('dirty');
+    showToast(err instanceof Error ? err.message : 'Failed to save button.', 'error');
+    return false;
+  }
+}
+
+async function handleInlineAddTrack(): Promise<void> {
+  if (!activeSet) return;
+  try {
+    const created = await createTrack(activeSet.id, {
+      title: 'New Button',
+      color: 'blue',
+      file: availableConsoleAudioFiles[0] || 'audio/1-Open-1st-SMIB-Faster.mp3',
+      cue: 'Enter cue directive here...',
+      lyrics: [],
+      order: tracks.length
+    });
+    tracks = [...tracks, created];
+    currentTrackIndex = tracks.length - 1;
+    buildPlaylistGrid(false);
+    syncInlineEditorToCurrentTrack();
+    byId<HTMLInputElement>('inlineEditTitle')?.focus();
+    byId<HTMLInputElement>('inlineEditTitle')?.select();
+    showToast('New button added!', 'success');
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : 'Failed to add button.', 'error');
+  }
+}
+
+async function handleInlineConfirmDelete(): Promise<void> {
+  const track = tracks[currentTrackIndex];
+  if (!activeSet || !track) return;
+  try {
+    await deleteTrack(activeSet.id, track.id);
+    dirtyInlineEdits = false;
+    pendingInlineDeleteConfirm = false;
+    tracks = tracks.filter((t) => t.id !== track.id);
+    if (currentTrackIndex >= tracks.length) {
+      currentTrackIndex = Math.max(0, tracks.length - 1);
+    }
+    buildPlaylistGrid(false);
+    syncInlineEditorToCurrentTrack();
+    showToast('Button deleted.', 'success');
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : 'Failed to delete button.', 'error');
+  }
+}
+
+function enterEditMode(): void {
+  if (!canEditActiveSet()) return;
+  isEditMode = true;
+  byId<HTMLDivElement>('screenConsole')?.classList.add('edit-mode-active');
+  updateConsoleAdminEditButton();
+  buildPlaylistGrid(false);
+  void fetchConsoleAudioFilesCatalog();
+  syncInlineEditorToCurrentTrack();
+}
+
+function exitEditMode(force = false): void {
+  if (!isEditMode) return;
+  if (!force && dirtyInlineEdits) {
+    requestGuardedEditAction(() => {
+      exitEditMode(true);
+    });
+    return;
+  }
+
+  stopInlineAudioPreview();
+  hideUnsavedPrompt();
+  pendingInlineDeleteConfirm = false;
+  dirtyInlineEdits = false;
+  isEditMode = false;
+  byId<HTMLDivElement>('screenConsole')?.classList.remove('edit-mode-active');
+  updateConsoleAdminEditButton();
+  buildPlaylistGrid(false);
+  if (tracks.length > 0) {
+    if (!isPlaying) {
+      loadTrack(currentTrackIndex);
+    } else {
+      syncPlayModeDisplay(tracks[currentTrackIndex]);
+    }
+  }
+}
+
+function updateConsoleAdminEditButton(): void {
+  const studioBtn = byId<HTMLButtonElement>('btnConsoleEditSet');
+  const toggleBtn = byId<HTMLButtonElement>('btnToggleEditMode');
+
+  if (isAdmin && activeSet) {
+    if (studioBtn) {
+      studioBtn.style.display = 'inline-flex';
+      studioBtn.onclick = () => {
+        window.location.href = `./edit.html?set=${encodeURIComponent(activeSet!.id)}`;
+      };
+    }
+  } else if (studioBtn) {
+    studioBtn.style.display = 'none';
+  }
+
+  if (!toggleBtn) return;
+  if (canEditActiveSet()) {
+    toggleBtn.style.display = 'inline-flex';
+    toggleBtn.classList.toggle('active', isEditMode);
+    toggleBtn.setAttribute('aria-pressed', isEditMode ? 'true' : 'false');
+    toggleBtn.innerText = isEditMode ? '✓ Done' : '✏️ Edit';
+  } else {
+    toggleBtn.style.display = 'none';
+    if (isEditMode) {
+      exitEditMode(true);
+    }
   }
 }
 
@@ -1325,6 +1939,7 @@ function renderAuthControls(): void {
 
 function initConsole(): void {
   initThemeSwitcher();
+  renderInlineColorSwatches();
 
   const checkbox = byId<HTMLInputElement>('mobileDataToggleCheckbox');
   if (checkbox) {
@@ -1341,7 +1956,101 @@ function initConsole(): void {
     void shareLodgeMusicApp();
   });
   byId<HTMLButtonElement>('resetStorageBtn')?.addEventListener('click', executePwaServiceCacheClear);
-  byId<HTMLButtonElement>('btnBackHome')?.addEventListener('click', navigateToHomeScreen);
+  byId<HTMLButtonElement>('btnBackHome')?.addEventListener('click', () => {
+    if (isEditMode && dirtyInlineEdits) {
+      requestGuardedEditAction(() => {
+        navigateToHomeScreen();
+      });
+      return;
+    }
+    navigateToHomeScreen();
+  });
+  byId<HTMLButtonElement>('btnToggleEditMode')?.addEventListener('click', () => {
+    if (isEditMode) {
+      exitEditMode(false);
+    } else {
+      enterEditMode();
+    }
+  });
+
+  byId<HTMLInputElement>('inlineEditTitle')?.addEventListener('input', () => {
+    applyInlineChipPreview();
+    setInlineSaveStatus('dirty');
+  });
+  byId<HTMLInputElement>('inlineEditFile')?.addEventListener('input', () => {
+    const picker = byId<HTMLSelectElement>('inlineAudioPicker');
+    const val = byId<HTMLInputElement>('inlineEditFile')?.value || '';
+    if (picker) {
+      picker.value = availableConsoleAudioFiles.includes(val) ? val : '';
+    }
+    setInlineSaveStatus('dirty');
+  });
+  byId<HTMLSelectElement>('inlineAudioPicker')?.addEventListener('change', (e) => {
+    const val = (e.target as HTMLSelectElement).value;
+    const fileInput = byId<HTMLInputElement>('inlineEditFile');
+    if (val && fileInput) {
+      fileInput.value = val;
+      setInlineSaveStatus('dirty');
+    }
+  });
+  byId<HTMLInputElement>('inlineEditCue')?.addEventListener('input', () => {
+    setInlineSaveStatus('dirty');
+  });
+  byId<HTMLTextAreaElement>('inlineEditLyrics')?.addEventListener('input', () => {
+    setInlineSaveStatus('dirty');
+  });
+
+  byId<HTMLButtonElement>('btnInlinePreviewAudio')?.addEventListener('click', toggleInlineAudioPreview);
+  byId<HTMLButtonElement>('btnInlineSaveTrack')?.addEventListener('click', () => {
+    void saveInlineTrackEdits();
+  });
+  byId<HTMLButtonElement>('btnInlineRevertTrack')?.addEventListener('click', () => {
+    restoreChipFromSavedTrack(currentTrackIndex);
+    syncInlineEditorToCurrentTrack();
+  });
+  byId<HTMLButtonElement>('btnInlineMoveEarlier')?.addEventListener('click', () => {
+    void reorderInlineTracks(currentTrackIndex, currentTrackIndex - 1);
+  });
+  byId<HTMLButtonElement>('btnInlineMoveLater')?.addEventListener('click', () => {
+    void reorderInlineTracks(currentTrackIndex, currentTrackIndex + 1);
+  });
+  byId<HTMLButtonElement>('btnInlineAddTrack')?.addEventListener('click', () => {
+    requestGuardedEditAction(() => {
+      void handleInlineAddTrack();
+    });
+  });
+  byId<HTMLButtonElement>('btnInlineEmptyAddTrack')?.addEventListener('click', () => {
+    void handleInlineAddTrack();
+  });
+  byId<HTMLButtonElement>('btnInlineDeleteTrack')?.addEventListener('click', () => {
+    pendingInlineDeleteConfirm = true;
+    renderInlineDeleteConfirmUI();
+  });
+  byId<HTMLButtonElement>('btnInlineCancelDelete')?.addEventListener('click', () => {
+    pendingInlineDeleteConfirm = false;
+    renderInlineDeleteConfirmUI();
+  });
+  byId<HTMLButtonElement>('btnInlineConfirmDelete')?.addEventListener('click', () => {
+    void handleInlineConfirmDelete();
+  });
+
+  byId<HTMLButtonElement>('btnInlineConfirmSave')?.addEventListener('click', async () => {
+    const action = pendingInlineAction;
+    const ok = await saveInlineTrackEdits();
+    if (ok) {
+      hideUnsavedPrompt();
+      if (action) action();
+    }
+  });
+  byId<HTMLButtonElement>('btnInlineConfirmDiscard')?.addEventListener('click', () => {
+    const action = pendingInlineAction;
+    restoreChipFromSavedTrack(currentTrackIndex);
+    dirtyInlineEdits = false;
+    hideUnsavedPrompt();
+    if (action) action();
+  });
+  byId<HTMLButtonElement>('btnInlineConfirmCancel')?.addEventListener('click', hideUnsavedPrompt);
+
   byId<HTMLButtonElement>('btnOpenOptions')?.addEventListener('click', openOperationsModal);
   byId<HTMLButtonElement>('btnCloseOptions')?.addEventListener('click', closeOperationsModal);
   byId<HTMLButtonElement>('playBtn')?.addEventListener('click', () => {
@@ -1466,6 +2175,7 @@ function initConsole(): void {
   window.addEventListener('beforeunload', () => {
     if (unsubscribeSets) unsubscribeSets();
     if (unsubscribeTracks) unsubscribeTracks();
+    stopInlineAudioPreview();
   });
 }
 

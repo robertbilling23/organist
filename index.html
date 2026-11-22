@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lodge Music</title>
-    <meta name="description" content="Lodge Music ceremonial audio cue console with cloud-synced setlists and offline playback.">
-    <meta property="og:title" content="Lodge Music">
-    <meta property="og:description" content="Lodge Music ceremonial audio cue console with cloud-synced setlists and offline playback.">
+    <title>Digital Organist</title>
+    <meta name="description" content="Digital Organist ceremonial audio cue console with cloud-synced setlists and offline playback.">
+    <meta property="og:title" content="Digital Organist">
+    <meta property="og:description" content="Digital Organist ceremonial audio cue console with cloud-synced setlists and offline playback.">
 
     <meta name="theme-color" content="#0b0e14">
     <link rel="manifest" href="./manifest.json">
@@ -15,7 +15,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Exo+2:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script>
         try {
-            if (localStorage.getItem('lodgeMusicTheme') !== 'default') {
+            var savedTheme = localStorage.getItem('lodgeMusicTheme');
+            if (savedTheme === 'forest' || savedTheme === 'pastel') {
+                document.documentElement.setAttribute('data-theme', 'forest');
+            } else if (savedTheme !== 'default') {
                 document.documentElement.setAttribute('data-theme', 'metal');
             }
         } catch (e) {
@@ -72,9 +75,15 @@
             --set-btn-border: #384a66;
             --set-btn-text: #ffffff;
             --chip-text: #e2e8f0;
+            --chip-active-text: #ffffff;
+            --chip-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+            --on-color-text: #ffffff;
             --btn-primary-text: #06131a;
             --active-chip-border: #ffffff;
             --active-chip-shadow: 0 0 20px 6px rgba(255, 255, 255, 0.85);
+            --ring-offset-color: #0b0e14;
+            --swatch-border: rgba(255, 255, 255, 0.55);
+            --floating-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
             --modal-overlay-bg: rgba(5, 7, 10, 0.85);
             --modal-bg: #131a24;
             --toast-bg: #1e293b;
@@ -182,6 +191,75 @@
             --btn-purple-border: #c084fc;
         }
 
+        html[data-theme="forest"] {
+            --outer-bg: #070c08;
+            --bg-dark: #0c140e;
+            --console-bg-image:
+                radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.08) 0%, transparent 55%),
+                linear-gradient(175deg, #101b13 0%, #0a110c 55%, #0e1811 100%);
+            --panel-bg: #121e15;
+            --panel-bg-image: linear-gradient(180deg, #17261b 0%, #101b13 100%);
+            --panel-border: #37543e;
+            --surface-elevated: #1b2c20;
+            --surface-subtle: #0b120d;
+            --admin-bar-bg: linear-gradient(180deg, #162b1d 0%, #101f15 100%);
+            --edit-btn-bg: #132a1b;
+            --ticker-bg: linear-gradient(90deg, rgba(74, 222, 128, 0.14) 0%, rgba(12, 20, 14, 0.95) 100%);
+            --cue-bg: linear-gradient(180deg, rgba(245, 185, 66, 0.16) 0%, rgba(24, 22, 12, 0.88) 100%);
+            --text-bright: #f4f9f5;
+            --text-dim: #b4cbb8;
+            --cue-gold: #fbbf24;
+            --play-green: #34d399;
+            --stop-red: #f87171;
+            --active-blue: #34d399;
+            --disabled: #162219;
+            --footer-blue: linear-gradient(180deg, #1b3423 0%, #112217 100%);
+            --footer-text: #f4f9f5;
+            --footer-subtext: #b9d2be;
+            --footer-control-bg: rgba(7, 12, 8, 0.45);
+            --banner-border: #436b4d;
+            --set-btn-bg: linear-gradient(180deg, #1e3826 0%, #132519 100%);
+            --set-btn-border: #4a8a5b;
+            --set-btn-text: #f4f9f5;
+            --chip-text: #ffffff;
+            --chip-active-text: #ffffff;
+            --chip-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+            --on-color-text: #ffffff;
+            --btn-primary-text: #051a0e;
+            --active-chip-border: #ffffff;
+            --active-chip-shadow: 0 0 0 2px #0c140e, 0 0 20px 4px rgba(74, 222, 128, 0.72);
+            --ring-offset-color: #0c140e;
+            --swatch-border: rgba(255, 255, 255, 0.55);
+            --floating-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+            --modal-overlay-bg: rgba(4, 8, 5, 0.88);
+            --modal-bg: #111c14;
+            --toast-bg: #17271c;
+            --toast-text: #f4f9f5;
+            --error-text: #fca5a5;
+            --error-bg: rgba(248, 113, 113, 0.16);
+            --panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px rgba(0, 0, 0, 0.55);
+            --btn-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+            --font-display: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+            /* High-Contrast Dark Forest Cue Tones */
+            --btn-darkblue: linear-gradient(180deg, #1b3a5c 0%, #10233a 100%);
+            --btn-darkblue-border: #60a5fa;
+            --btn-blue: linear-gradient(180deg, #144d56 0%, #0b3038 100%);
+            --btn-blue-border: #2dd4bf;
+            --btn-yellow: linear-gradient(180deg, #6b4c0e 0%, #453006 100%);
+            --btn-yellow-border: #fbbf24;
+            --btn-green: linear-gradient(180deg, #165934 0%, #0c3820 100%);
+            --btn-green-border: #4ade80;
+            --btn-red: linear-gradient(180deg, #6e1d24 0%, #471015 100%);
+            --btn-red-border: #f87171;
+            --btn-orange: linear-gradient(180deg, #6e3512 0%, #472009 100%);
+            --btn-orange-border: #fb923c;
+            --btn-purple: linear-gradient(180deg, #432461 0%, #2a1540 100%);
+            --btn-purple-border: #c084fc;
+        }
+
         body {
             font-family: var(--font-body);
             background-color: var(--outer-bg);
@@ -199,6 +277,10 @@
         html[data-theme="metal"] body {
             background-image: radial-gradient(circle at 50% 20%, #181e28 0%, #07090d 75%);
             letter-spacing: 0.01em;
+        }
+
+        html[data-theme="forest"] body {
+            background-image: radial-gradient(circle at 50% 20%, #132117 0%, #070c08 80%);
         }
 
         button:focus-visible,
@@ -224,6 +306,12 @@
         html[data-theme="metal"] .console-grid {
             border-left: 1px solid rgba(148, 163, 184, 0.22);
             border-right: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 0 48px rgba(0, 0, 0, 0.8);
+        }
+
+        html[data-theme="forest"] .console-grid {
+            border-left: 1px solid rgba(74, 128, 88, 0.3);
+            border-right: 1px solid rgba(74, 128, 88, 0.3);
             box-shadow: 0 0 48px rgba(0, 0, 0, 0.8);
         }
 
@@ -291,6 +379,12 @@
             border-color: #64748b;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 6px 18px rgba(0, 0, 0, 0.5);
             text-shadow: 0 0 16px rgba(0, 229, 255, 0.28);
+        }
+
+        html[data-theme="forest"] .home-header-banner {
+            border-width: 1.5px;
+            border-color: var(--banner-border);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 18px rgba(0, 0, 0, 0.5);
         }
 
         .owner-admin-bar {
@@ -459,7 +553,7 @@
             height: 72px;
             padding: 4px 6px;
             box-shadow: var(--btn-shadow);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+            text-shadow: var(--chip-text-shadow);
         }
 
         .nav-chip.color-darkblue { background: var(--btn-darkblue); border-color: var(--btn-darkblue-border); }
@@ -509,16 +603,16 @@
         }
 
         .nav-chip.active {
-            color: #ffffff !important;
+            color: var(--chip-active-text) !important;
             font-weight: 700 !important;
             border-color: var(--active-chip-border) !important;
             box-shadow: var(--active-chip-shadow);
-            filter: brightness(1.16);
+            filter: brightness(1.06);
             transform: scale(0.97);
         }
 
         .nav-chip.playing-now {
-            color: #ffffff !important;
+            color: var(--chip-active-text) !important;
             font-weight: 700 !important;
             border: 3px solid var(--play-green) !important;
             box-shadow: 0 0 25px 5px var(--play-green) !important;
@@ -526,7 +620,7 @@
         }
 
         .nav-chip.fading-now {
-            color: #ffffff !important;
+            color: var(--chip-active-text) !important;
             font-weight: 700 !important;
             border: 3px solid var(--stop-red) !important;
             box-shadow: 0 0 30px 8px var(--stop-red) !important;
@@ -585,6 +679,69 @@
             color: var(--text-bright);
         }
 
+        .console-lower-stage {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .console-play-view {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .console-edit-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #screenConsole.edit-mode-active .console-play-view {
+            display: none;
+        }
+        #screenConsole.edit-mode-active .console-edit-view {
+            display: flex;
+        }
+        #screenConsole.edit-mode-active .playlist-grid-container {
+            max-height: 34vh;
+            border-color: var(--cue-gold);
+        }
+
+        .nav-chip.edit-mode-chip {
+            position: relative;
+            cursor: grab;
+        }
+        .nav-chip.edit-mode-chip::before {
+            content: "✎";
+            position: absolute;
+            top: 3px;
+            left: 5px;
+            font-size: 0.72rem;
+            opacity: 0.75;
+            pointer-events: none;
+        }
+        .nav-chip.edit-mode-chip.dragging {
+            opacity: 0.45;
+            transform: scale(0.95);
+        }
+        .nav-chip.edit-mode-chip.drag-over {
+            border-color: var(--active-blue) !important;
+            box-shadow: 0 0 0 2px var(--ring-offset-color), 0 0 18px 3px rgba(0, 229, 255, 0.75);
+            transform: scale(1.03);
+        }
+        #screenConsole.edit-mode-active .nav-chip.active {
+            border-color: var(--cue-gold) !important;
+            box-shadow: 0 0 0 2px var(--ring-offset-color), 0 0 18px 3px rgba(255, 190, 46, 0.75);
+        }
+
         .lyrics-section-wrapper {
             position: relative;
             flex: 1;
@@ -600,7 +757,7 @@
             background-image: var(--panel-bg-image);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 15px 15px 45px 15px;
+            padding: 15px 15px 68px 15px;
             flex: 1;
             overflow-y: auto;
             box-sizing: border-box;
@@ -618,10 +775,46 @@
             color: var(--text-bright);
         }
 
-        .btn-floating-deck-cog {
+        .floating-deck-controls {
             position: absolute;
             bottom: 12px;
             right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 500;
+        }
+
+        .btn-floating-edit-mode {
+            background: var(--surface-elevated);
+            border: 2px solid var(--cue-gold);
+            color: var(--text-bright);
+            border-radius: 22px;
+            min-height: 44px;
+            padding: 0 14px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.92rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: var(--floating-shadow);
+            transition: transform 0.12s ease, background-color 0.15s ease, color 0.15s ease;
+        }
+        .btn-floating-edit-mode:active {
+            transform: scale(0.96);
+        }
+        .btn-floating-edit-mode.active {
+            background: var(--cue-gold);
+            border-color: #fff3cd;
+            color: #0b0e14;
+            font-weight: 800;
+        }
+
+        .btn-floating-deck-cog {
             background: var(--surface-elevated);
             border: 2px solid var(--active-blue);
             color: var(--text-bright);
@@ -633,8 +826,275 @@
             align-items: center;
             cursor: pointer;
             font-size: 1.3rem;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
-            z-index: 500;
+            box-shadow: var(--floating-shadow);
+            flex-shrink: 0;
+        }
+
+        /* ================= INLINE CONSOLE BUTTON EDITOR ================= */
+        .inline-editor-panel {
+            background-color: var(--panel-bg);
+            background-image: var(--panel-bg-image);
+            border: 1.5px solid var(--cue-gold);
+            border-radius: 8px;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--panel-shadow);
+        }
+
+        .inline-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: var(--surface-subtle);
+            border-bottom: 1px solid var(--panel-border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .inline-editor-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .inline-editor-heading {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--cue-gold);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .inline-save-status {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .inline-save-status.dirty {
+            color: var(--cue-gold);
+        }
+        .inline-save-status.saved {
+            color: var(--play-green);
+        }
+
+        .inline-editor-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .inline-reorder-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-inline-move {
+            min-width: 34px;
+            padding: 5px 8px;
+        }
+        .btn-inline-move:disabled,
+        .btn-inline-secondary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .inline-unsaved-banner {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(243, 156, 18, 0.16);
+            border-bottom: 1px solid var(--cue-gold);
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            flex-shrink: 0;
+        }
+
+        .inline-unsaved-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .inline-editor-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 12px 12px 74px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            box-sizing: border-box;
+        }
+
+        .inline-empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 24px 16px 74px 16px;
+            text-align: center;
+            color: var(--text-dim);
+            flex: 1;
+        }
+
+        .inline-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .inline-form-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dim);
+        }
+
+        .inline-editor-scroll input[type="text"],
+        .inline-editor-scroll select,
+        .inline-editor-scroll textarea {
+            background: var(--surface-subtle);
+            color: var(--text-bright);
+            border: 1.5px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-family: var(--font-body);
+            font-size: 0.96rem;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        .inline-editor-scroll input[type="text"]:focus,
+        .inline-editor-scroll select:focus,
+        .inline-editor-scroll textarea:focus {
+            border-color: var(--active-blue);
+        }
+        .inline-editor-scroll textarea {
+            resize: vertical;
+            min-height: 82px;
+            line-height: 1.4;
+        }
+
+        .inline-audio-picker-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .inline-audio-picker-row select {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .inline-color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        @media (max-width: 440px) {
+            .inline-color-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .inline-color-btn {
+            border: 2px solid var(--panel-border);
+            border-radius: 6px;
+            min-height: 38px;
+            padding: 5px 6px;
+            color: var(--chip-text);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-shadow: var(--chip-text-shadow);
+            transition: transform 0.1s ease, box-shadow 0.15s ease;
+        }
+        .inline-color-btn.color-darkblue { background: var(--btn-darkblue); border-color: var(--btn-darkblue-border); }
+        .inline-color-btn.color-blue     { background: var(--btn-blue);     border-color: var(--btn-blue-border); }
+        .inline-color-btn.color-yellow   { background: var(--btn-yellow);   border-color: var(--btn-yellow-border); }
+        .inline-color-btn.color-green    { background: var(--btn-green);    border-color: var(--btn-green-border); }
+        .inline-color-btn.color-red      { background: var(--btn-red);      border-color: var(--btn-red-border); }
+        .inline-color-btn.color-orange   { background: var(--btn-orange);   border-color: var(--btn-orange-border); }
+        .inline-color-btn.color-purple   { background: var(--btn-purple);   border-color: var(--btn-purple-border); }
+        .inline-color-btn.active {
+            border-color: var(--active-chip-border) !important;
+            box-shadow: 0 0 0 2px var(--ring-offset-color), 0 0 12px rgba(128, 128, 128, 0.55);
+            transform: scale(0.97);
+        }
+
+        .btn-inline-primary,
+        .btn-inline-secondary,
+        .btn-inline-danger {
+            min-height: 38px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-family: var(--font-display);
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-inline-primary {
+            background: var(--active-blue);
+            border: 1.5px solid #a5f3fc;
+            color: var(--btn-primary-text);
+        }
+        .btn-inline-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .btn-inline-secondary {
+            background: var(--surface-elevated);
+            border: 1.5px solid var(--panel-border);
+            color: var(--text-bright);
+        }
+        .btn-inline-danger {
+            background: var(--btn-red);
+            border: 1.5px solid var(--stop-red);
+            color: var(--on-color-text);
+        }
+        .btn-inline-sm {
+            min-height: 34px;
+            padding: 5px 10px;
+            font-size: 0.82rem;
+        }
+
+        .inline-editor-footer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+            border-top: 1px dashed var(--panel-border);
+        }
+
+        .inline-delete-confirm {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: var(--error-text);
+            font-weight: 700;
         }
 
         .home-switcher-container {
@@ -765,12 +1225,13 @@
             opacity: 0.85;
         }
 
-        /* ================= THEME SWITCHER (BOTTOM BAR) ================= */
+        /* ================= THEME SWITCHER (FRONT SCREEN BOTTOM BAR) ================= */
         .theme-switcher-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
             padding: 6px 10px;
             background-color: var(--panel-bg);
             background-image: var(--panel-bg-image);
@@ -790,6 +1251,7 @@
         .theme-segmented {
             display: inline-flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 4px;
             padding: 3px;
             background: var(--surface-subtle);
@@ -802,7 +1264,7 @@
             justify-content: center;
             gap: 6px;
             min-height: 34px;
-            padding: 5px 11px;
+            padding: 5px 10px;
             border: 1px solid transparent;
             border-radius: 5px;
             background: transparent;
@@ -815,19 +1277,26 @@
             flex-shrink: 0;
             transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
+        @media (max-width: 440px) {
+            .btn-theme-opt {
+                padding: 5px 8px;
+                font-size: 0.75rem;
+                gap: 4px;
+            }
+        }
         .btn-theme-opt:hover {
             color: var(--text-bright);
         }
         .btn-theme-opt.active {
             background: var(--footer-blue);
-            color: #ffffff;
+            color: var(--footer-text);
             border-color: var(--active-blue);
         }
         .theme-swatch {
             width: 11px;
             height: 11px;
             border-radius: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.55);
+            border: 1px solid var(--swatch-border);
             flex-shrink: 0;
         }
         .theme-swatch-metal {
@@ -835,6 +1304,9 @@
         }
         .theme-swatch-default {
             background: linear-gradient(135deg, #0f141c 50%, #00bcd4 50%);
+        }
+        .theme-swatch-forest {
+            background: linear-gradient(135deg, #163822 45%, #4ade80 55%);
         }
 
         .ceremonial-footer {
@@ -866,7 +1338,7 @@
             align-items: center;
             justify-content: space-between;
             background: var(--footer-control-bg);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--banner-border);
             padding: 7px 12px;
             border-radius: 6px;
             margin-top: 2px;
@@ -942,7 +1414,7 @@
         .btn-modal-close {
             background: var(--footer-blue);
             border: 1.5px solid var(--active-blue);
-            color: #ffffff;
+            color: var(--footer-text);
             font-family: var(--font-display);
             font-weight: 700;
             font-size: 1.02rem;
@@ -1011,7 +1483,7 @@
             padding: 14px;
             border-radius: 8px;
             border: 2px solid var(--panel-border);
-            color: #ffffff;
+            color: var(--on-color-text);
             font-family: var(--font-display);
             font-size: 1.05rem;
             font-weight: 700;
@@ -1070,7 +1542,7 @@
         .btn-vol.active {
             background: var(--footer-blue);
             border-color: var(--active-blue);
-            color: #ffffff;
+            color: var(--footer-text);
         }
 
         .app-toast {
@@ -1110,7 +1582,7 @@
 
     <div class="app-screen active-view" id="screenHome">
         <div class="home-scrolling-content-zone">
-            <div class="home-header-banner">Lodge Music</div>
+            <div class="home-header-banner">Digital Organist</div>
             <div class="owner-admin-bar" id="ownerAdminBar"></div>
             <div class="home-switcher-container">
                 <div class="set-switcher-grid" id="setSwitcherRow"></div>
@@ -1123,30 +1595,13 @@
 
         <div class="home-anchored-bottom-tray">
             <div class="ceremonial-footer">
-                <div>
-                    I hope you find my app handy. Please share any requests or feedback.
-                    <span class="footer-sub-note" style="margin-top: 4px;">WBro. Robert Billing PGSwdB GLHer</span>
-                </div>
-
-                <div class="mobile-data-row">
+                <div class="mobile-data-row" style="margin-top: 0;">
                     <span class="mobile-data-label">Allow Mobile Data Downloads:</span>
                     <input type="checkbox" id="mobileDataToggleCheckbox" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--active-blue);">
                 </div>
             </div>
 
             <div class="home-action-row-container">
-                <button type="button" class="btn-home-share-primary" id="shareAppBtn">🔗 Share App Connection</button>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim);">
-                    <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
-                    <span>Build: <span style="font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--active-blue); font-weight: bold;">v59</span></span>
-                </div>
-
-                <div class="home-bottom-links">
-                    <button type="button" class="btn-home-refresh-subtle" id="ownerSignInBtn">owner sign in</button>
-                    <button type="button" class="btn-home-refresh-subtle" id="resetStorageBtn">reset / repair system storage</button>
-                </div>
-
                 <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
                     <span class="theme-switcher-label">Theme</span>
                     <div class="theme-segmented">
@@ -1158,7 +1613,23 @@
                             <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
                             Night Console
                         </button>
+                        <button type="button" class="btn-theme-opt" data-theme-value="forest" aria-pressed="false">
+                            <span class="theme-swatch theme-swatch-forest" aria-hidden="true"></span>
+                            Dark Forest
+                        </button>
                     </div>
+                </div>
+
+                <button type="button" class="btn-home-share-primary" id="shareAppBtn">🔗 Click to send app to another person</button>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim);">
+                    <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
+                    <span>Build: <span style="font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--active-blue); font-weight: bold;">v59</span></span>
+                </div>
+
+                <div class="home-bottom-links">
+                    <button type="button" class="btn-home-refresh-subtle" id="ownerSignInBtn">owner sign in</button>
+                    <button type="button" class="btn-home-refresh-subtle" id="resetStorageBtn">reset / repair system storage</button>
                 </div>
             </div>
         </div>
@@ -1168,44 +1639,115 @@
     <div class="app-screen" id="screenConsole">
         <div class="screen-header-bar">
             <button type="button" class="btn-header-back" id="btnBackHome">◀ BACK</button>
-            <div class="header-title-text" id="headerTitleDisplay">Lodge Music</div>
-            <button type="button" class="btn-header-edit" id="btnConsoleEditSet">✏️ Edit</button>
+            <div class="header-title-text" id="headerTitleDisplay">Digital Organist</div>
+            <button type="button" class="btn-header-edit" id="btnConsoleEditSet" title="Open Full Configuration Studio">🎛️ Studio</button>
         </div>
 
         <div class="playlist-grid-container">
             <div class="playlist-grid" id="playlistGrid"></div>
         </div>
 
-        <div class="track-ticker-line">
-            <span>Selected Track:</span>
-            <span class="ticker-highlight" id="tickerTrackTitle">None</span>
-        </div>
+        <div class="console-lower-stage">
+            <div class="console-play-view" id="consolePlayView">
+                <div class="track-ticker-line">
+                    <span>Selected Track:</span>
+                    <span class="ticker-highlight" id="tickerTrackTitle">None</span>
+                </div>
 
-        <div class="cue-banner">
-            <span class="cue-label">Press the button again to start playing</span>
-            <span class="cue-text" id="cueText">Loading configuration...</span>
-        </div>
+                <div class="cue-banner">
+                    <span class="cue-label">Press the button again to start playing</span>
+                    <span class="cue-text" id="cueText">Loading configuration...</span>
+                </div>
 
-        <div class="lyrics-section-wrapper">
-            <div class="lyrics-panel">
-                <div class="lyrics-content-container" id="lyricsPanel">
-                    <div class="lyric-line">Select a track row sequence to begin.</div>
+                <div class="lyrics-section-wrapper">
+                    <div class="lyrics-panel">
+                        <div class="lyrics-content-container" id="lyricsPanel">
+                            <div class="lyric-line">Select a track row sequence to begin.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <button type="button" class="btn-floating-deck-cog" id="btnOpenOptions">⚙️</button>
-        </div>
 
-        <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
-            <span class="theme-switcher-label">Theme</span>
-            <div class="theme-segmented">
-                <button type="button" class="btn-theme-opt active" data-theme-value="metal" aria-pressed="true">
-                    <span class="theme-swatch theme-swatch-metal" aria-hidden="true"></span>
-                    Dark Metal
-                </button>
-                <button type="button" class="btn-theme-opt" data-theme-value="default" aria-pressed="false">
-                    <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
-                    Night Console
-                </button>
+            <div class="console-edit-view" id="consoleEditView">
+                <div class="inline-editor-panel">
+                    <div class="inline-editor-header">
+                        <div class="inline-editor-title-group">
+                            <span class="inline-editor-heading" id="inlineEditorHeading">Edit Button</span>
+                            <span class="inline-save-status" id="inlineSaveStatus">Synced</span>
+                        </div>
+                        <div class="inline-editor-header-actions">
+                            <div class="inline-reorder-group" role="group" aria-label="Reorder selected button">
+                                <button type="button" class="btn-inline-secondary btn-inline-sm btn-inline-move" id="btnInlineMoveEarlier" title="Move button earlier" aria-label="Move button earlier" disabled>◀</button>
+                                <button type="button" class="btn-inline-secondary btn-inline-sm btn-inline-move" id="btnInlineMoveLater" title="Move button later" aria-label="Move button later" disabled>▶</button>
+                            </div>
+                            <button type="button" class="btn-inline-secondary btn-inline-sm" id="btnInlineAddTrack">+ New</button>
+                            <button type="button" class="btn-inline-primary btn-inline-sm" id="btnInlineSaveTrack" disabled>Save</button>
+                        </div>
+                    </div>
+
+                    <div class="inline-unsaved-banner" id="inlineUnsavedBanner">
+                        <span id="inlineUnsavedText">You have unsaved changes to this button.</span>
+                        <div class="inline-unsaved-actions">
+                            <button type="button" class="btn-inline-primary btn-inline-sm" id="btnInlineConfirmSave">Save &amp; Continue</button>
+                            <button type="button" class="btn-inline-danger btn-inline-sm" id="btnInlineConfirmDiscard">Discard</button>
+                            <button type="button" class="btn-inline-secondary btn-inline-sm" id="btnInlineConfirmCancel">Stay</button>
+                        </div>
+                    </div>
+
+                    <div class="inline-empty-state" id="inlineEmptyState">
+                        <div>No buttons in this set yet.</div>
+                        <button type="button" class="btn-inline-primary" id="btnInlineEmptyAddTrack">+ Add First Button</button>
+                    </div>
+
+                    <div class="inline-editor-scroll" id="inlineEditorFormBody">
+                        <div class="inline-form-group">
+                            <label for="inlineEditTitle">Button Label</label>
+                            <input type="text" id="inlineEditTitle" maxlength="100" placeholder="e.g. Opening Ode">
+                        </div>
+
+                        <div class="inline-form-group">
+                            <label>Button Color</label>
+                            <div class="inline-color-grid" id="inlineColorSwatches"></div>
+                        </div>
+
+                        <div class="inline-form-group">
+                            <label for="inlineAudioPicker">Audio File</label>
+                            <div class="inline-audio-picker-row">
+                                <select id="inlineAudioPicker" aria-label="Select existing audio file">
+                                    <option value="">-- Pick an existing file in /audio --</option>
+                                </select>
+                                <button type="button" class="btn-inline-secondary btn-inline-sm" id="btnInlinePreviewAudio">▶ Test</button>
+                            </div>
+                            <input type="text" id="inlineEditFile" maxlength="300" list="consoleAudioFilesDatalist" placeholder="audio/filename.mp3">
+                            <datalist id="consoleAudioFilesDatalist"></datalist>
+                        </div>
+
+                        <div class="inline-form-group">
+                            <label for="inlineEditCue">Cue Directive</label>
+                            <input type="text" id="inlineEditCue" maxlength="500" placeholder="Visual cue shown when button is selected">
+                        </div>
+
+                        <div class="inline-form-group">
+                            <label for="inlineEditLyrics">Lyrics / Words (one line per row)</label>
+                            <textarea id="inlineEditLyrics" rows="4" placeholder="Enter lyrics or ceremonial notes..."></textarea>
+                        </div>
+
+                        <div class="inline-editor-footer-actions">
+                            <button type="button" class="btn-inline-secondary btn-inline-sm" id="btnInlineRevertTrack">Revert</button>
+                            <button type="button" class="btn-inline-danger btn-inline-sm" id="btnInlineDeleteTrack">Delete Button</button>
+                            <div class="inline-delete-confirm" id="inlineDeleteConfirmBox" style="display: none;">
+                                <span>Delete this button?</span>
+                                <button type="button" class="btn-inline-danger btn-inline-sm" id="btnInlineConfirmDelete">Yes, Delete</button>
+                                <button type="button" class="btn-inline-secondary btn-inline-sm" id="btnInlineCancelDelete">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="floating-deck-controls">
+                <button type="button" class="btn-floating-edit-mode" id="btnToggleEditMode" aria-pressed="false">✏️ Edit</button>
+                <button type="button" class="btn-floating-deck-cog" id="btnOpenOptions" title="Play Options" aria-label="Play Options">⚙️</button>
             </div>
         </div>
     </div>
@@ -1226,7 +1768,7 @@
                         <span class="raw-filename-readout" id="trackFilenameReadout">no_file.mp3</span>
                         <span class="track-error-notice" id="trackErrorNotice"></span>
                         <input type="file" id="missingAudioFileInput" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac" style="display: none;">
-                        <button type="button" id="uploadMissingAudioBtn" style="display: none; margin-top: 6px; background: var(--footer-blue); color: #ffffff; border: 1px solid var(--active-blue); border-radius: 6px; padding: 8px 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: left;">📁 Select / Upload Missing Audio File</button>
+                        <button type="button" id="uploadMissingAudioBtn" style="display: none; margin-top: 6px; background: var(--footer-blue); color: var(--footer-text); border: 1px solid var(--active-blue); border-radius: 6px; padding: 8px 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: left;">📁 Select / Upload Missing Audio File</button>
                     </div>
                     <span class="running-time" id="trackTime">0:00 / 0:00</span>
                 </div>
@@ -1414,10 +1956,17 @@
           });
       }
 
+      function normalizeFallbackTheme(val) {
+        if (val === 'default') return 'default';
+        if (val === 'forest' || val === 'pastel') return 'forest';
+        return 'metal';
+      }
       function applyFallbackTheme(theme) {
-        var resolved = theme === 'default' ? 'default' : 'metal';
+        var resolved = normalizeFallbackTheme(theme);
         if (resolved === 'metal') {
           document.documentElement.setAttribute('data-theme', 'metal');
+        } else if (resolved === 'forest') {
+          document.documentElement.setAttribute('data-theme', 'forest');
         } else {
           document.documentElement.removeAttribute('data-theme');
         }
@@ -1431,7 +1980,7 @@
       }
       (function () {
         var initial = 'metal';
-        try { initial = localStorage.getItem('lodgeMusicTheme') === 'default' ? 'default' : 'metal'; } catch (e) {}
+        try { initial = normalizeFallbackTheme(localStorage.getItem('lodgeMusicTheme')); } catch (e) {}
         applyFallbackTheme(initial);
         var btns = document.querySelectorAll('[data-theme-value]');
         for (var i = 0; i < btns.length; i++) {
@@ -1455,7 +2004,7 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(function () { toast('Public app link copied!'); }).catch(function () {});
         }
-        if (navigator.share) { navigator.share({ title: 'Lodge Music', url: url }).catch(function () {}); }
+        if (navigator.share) { navigator.share({ title: 'Digital Organist', url: url }).catch(function () {}); }
       };
       if ($('resetStorageBtn')) $('resetStorageBtn').onclick = function () {
         if ('caches' in window) caches.keys().then(function (ns) { ns.forEach(function (n) { caches.delete(n); }); });

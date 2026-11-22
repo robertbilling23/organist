@@ -190,7 +190,7 @@ function renderAuthGate(): void {
     gatePanel.innerHTML = `
       <div class="auth-card">
         <h2>Owner Sign-In Required</h2>
-        <p>Anyone can use the public Lodge Music player without an account. Sign in with the owner Google account (<strong>${OWNER_EMAIL}</strong>) to edit buttons, colors, order, or migrate your configuration.</p>
+        <p>Anyone can use the public Digital Organist player without an account. Sign in with the owner Google account (<strong>${OWNER_EMAIL}</strong>) to edit buttons, colors, order, or migrate your configuration.</p>
         <div id="editorAuthErrorBox" style="display:none;background:rgba(243,156,18,0.12);border:1px solid var(--cue-gold);border-radius:8px;padding:12px;text-align:left;font-size:0.88rem;line-height:1.45;color:var(--text-bright);"></div>
         <div class="auth-actions">
           <button type="button" class="btn-utility btn-primary" id="btnGoogleSignIn">Sign in with Google</button>
