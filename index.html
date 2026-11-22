@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lodge Music</title>
-    
+    <meta name="description" content="Lodge Music ceremonial audio cue console with cloud-synced setlists and offline playback.">
+    <meta property="og:title" content="Lodge Music">
+    <meta property="og:description" content="Lodge Music ceremonial audio cue console with cloud-synced setlists and offline playback.">
+
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
                     .then(reg => {
-                        console.log('Service Worker Registered Successfully!');
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
+                            if (!installingWorker) return;
                             installingWorker.onstatechange = () => {
-                                if (installingWorker.state === 'activated') {
-                                    window.location.reload(); 
+                                if (installingWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                                    window.location.reload();
                                 }
                             };
                         };
@@ -30,7 +33,7 @@
         :root {
             --bg-dark: #0f141c;
             --panel-bg: #161f2b;
-            --panel-border: #384a66; 
+            --panel-border: #384a66;
             --text-bright: #ffffff;
             --text-dim: #9ab0c7;
             --cue-gold: #f39c12;
@@ -41,18 +44,18 @@
             --footer-blue: #0f2c59;
 
             /* Rich & Masonic Ceremonial Tones */
-            --btn-darkblue: #26354a; 
-            --btn-blue: #4a6785;     
-            --btn-yellow: #7a5a13;   
-            --btn-green: #1b4f2e;    
-            --btn-red: #661a1a;      
-            --btn-orange: #7a3711;   
-            --btn-purple: #3f1b69;   
+            --btn-darkblue: #26354a;
+            --btn-blue: #4a6785;
+            --btn-yellow: #7a5a13;
+            --btn-green: #1b4f2e;
+            --btn-red: #661a1a;
+            --btn-orange: #7a3711;
+            --btn-purple: #3f1b69;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #05070a; 
+            background-color: #05070a;
             color: var(--text-bright);
             margin: 0;
             padding: 0;
@@ -60,7 +63,7 @@
             -webkit-user-select: none;
             user-select: none;
             touch-action: manipulation;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         .console-grid {
@@ -68,8 +71,8 @@
             top: 0; bottom: 0; left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 640px; 
-            background-color: var(--bg-dark); 
+            max-width: 640px;
+            background-color: var(--bg-dark);
             box-sizing: border-box;
             padding: 10px;
             overflow: hidden;
@@ -85,14 +88,14 @@
             flex-direction: column;
             gap: 10px;
             box-sizing: border-box;
-            overflow: hidden; 
+            overflow: hidden;
         }
         .app-screen.active-view {
             display: flex;
         }
 
         #screenHome {
-            padding-bottom: 250px; 
+            padding-bottom: 270px;
         }
 
         .home-scrolling-content-zone {
@@ -100,6 +103,9 @@
             height: 100%;
             overflow-y: auto;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .home-anchored-bottom-tray {
@@ -108,9 +114,10 @@
             background: var(--bg-dark);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             box-sizing: border-box;
             z-index: 900;
+            padding-top: 4px;
         }
 
         .home-header-banner {
@@ -125,7 +132,73 @@
             text-align: center;
             box-sizing: border-box;
             flex-shrink: 0;
-            margin-bottom: 4px;
+        }
+
+        .owner-admin-bar {
+            background: #132238;
+            border: 1px solid var(--active-blue);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: none;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .owner-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            min-width: 0;
+        }
+        .owner-badge {
+            background: var(--play-green);
+            color: #062111;
+            font-weight: 900;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 0.4px;
+        }
+        .viewer-badge {
+            background: #334155;
+            color: #e2e8f0;
+            font-weight: 800;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+        .owner-email {
+            color: var(--text-dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .owner-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-owner-edit {
+            background: var(--active-blue);
+            color: #06131a;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 0.85rem;
+            padding: 7px 12px;
+            border-radius: 6px;
+        }
+        .btn-owner-signout {
+            background: #1e293b;
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
         .screen-header-bar {
@@ -137,7 +210,7 @@
             padding: 8px 12px;
             height: 52px;
             box-sizing: border-box;
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
         }
 
@@ -150,6 +223,22 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .btn-header-edit {
+            background: #132c3d;
+            border: 1px solid var(--active-blue);
+            color: var(--active-blue);
+            font-weight: 800;
+            padding: 6px 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
         }
 
         .header-title-text {
@@ -167,17 +256,17 @@
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 10px;
-            flex: 0 1 auto; 
-            max-height: 54vh; 
-            overflow-y: auto;   
+            flex: 0 1 auto;
+            max-height: 54vh;
+            overflow-y: auto;
             box-sizing: border-box;
         }
 
         .playlist-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); 
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         .nav-chip {
@@ -185,11 +274,11 @@
             color: #e2e8f0;
             box-sizing: border-box;
             border-radius: 8px;
-            font-size: 1.25rem; 
+            font-size: 1.25rem;
             font-weight: normal;
             text-align: center;
             cursor: pointer;
-            white-space: normal; 
+            white-space: normal;
             word-break: break-word;
             display: flex;
             align-items: center;
@@ -207,7 +296,7 @@
         .nav-chip.color-red      { background-color: var(--btn-red);      border-color: var(--panel-border); }
         .nav-chip.color-orange   { background-color: var(--btn-orange);   border-color: var(--btn-orange); }
         .nav-chip.color-purple   { background-color: var(--btn-purple);   border-color: var(--btn-purple); }
-        
+
         .nav-chip.not-loaded {
             opacity: 0.85;
             position: relative;
@@ -221,9 +310,34 @@
             opacity: 0.65;
         }
 
+        .nav-chip.missing-audio {
+            opacity: 0.65;
+            position: relative;
+            border-color: var(--stop-red);
+        }
+        .nav-chip.missing-audio::after {
+            content: "⚠️";
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 0.8rem;
+        }
+
+        .track-error-notice {
+            display: none;
+            font-size: 0.82rem;
+            color: #ffb4a9;
+            background: rgba(231, 76, 60, 0.16);
+            border: 1px solid var(--stop-red);
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin-top: 4px;
+            word-break: break-word;
+        }
+
         .nav-chip.active {
             color: #ffffff !important;
-            font-weight: 900 !important; 
+            font-weight: 900 !important;
             border-color: #ffffff !important;
             box-shadow: 0 0 20px 6px rgba(255, 255, 255, 0.85);
             filter: brightness(1.2);
@@ -243,8 +357,8 @@
             font-weight: 900 !important;
             border: 4px solid var(--stop-red) !important;
             box-shadow: 0 0 30px 8px var(--stop-red) !important;
-            animation: stopPulse 0.6s infinite ease-in-out; 
-            pointer-events: none; 
+            animation: stopPulse 0.6s infinite ease-in-out;
+            pointer-events: none;
         }
 
         .track-ticker-line {
@@ -266,7 +380,7 @@
 
         .cue-banner {
             background: rgba(243, 156, 18, 0.12);
-            border: 2px solid var(--cue-gold); 
+            border: 2px solid var(--cue-gold);
             border-radius: 8px;
             padding: 12px;
             position: relative;
@@ -291,27 +405,32 @@
 
         .lyrics-section-wrapper {
             position: relative;
-            flex: 1; 
+            flex: 1;
             box-sizing: border-box;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            min-height: 80px; 
+            min-height: 80px;
         }
 
         .lyrics-panel {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 15px 15px 45px 15px; 
-            flex: 1; 
-            overflow-y: auto; 
+            padding: 15px 15px 45px 15px;
+            flex: 1;
+            overflow-y: auto;
             box-sizing: border-box;
         }
         .lyrics-content-container {
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+        .lyric-line {
+            font-size: 1.05rem;
+            line-height: 1.45;
+            color: var(--text-bright);
         }
 
         .btn-floating-deck-cog {
@@ -341,10 +460,31 @@
             width: 100%;
             box-sizing: border-box;
         }
-        
+
+        .empty-sets-card {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            background: #131c29;
+            border: 1px dashed var(--panel-border);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .btn-migrate-now {
+            background: var(--active-blue);
+            color: #05131a;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 1.02rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
         .set-switcher-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); 
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
         .btn-set-switch {
@@ -352,7 +492,7 @@
             border: 2px solid var(--panel-border);
             background: #233145;
             color: #ffffff;
-            font-size: 1.3rem; 
+            font-size: 1.3rem;
             font-weight: 900;
             border-radius: 8px;
             cursor: pointer;
@@ -360,7 +500,7 @@
             word-break: break-word;
             line-height: 1.2;
             box-sizing: border-box;
-            height: 84px; 
+            height: 84px;
             padding: 6px;
             display: flex;
             align-items: center;
@@ -375,19 +515,19 @@
         .home-action-row-container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
             box-sizing: border-box;
         }
-        
+
         .btn-home-share-primary {
             width: 100%;
             background: var(--panel-bg);
             border: 2px solid var(--panel-border);
             color: #ffffff;
             font-weight: 900;
-            font-size: 1.25rem; 
-            padding: 18px 10px; 
+            font-size: 1.2rem;
+            padding: 15px 10px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
@@ -400,6 +540,14 @@
             transform: scale(0.97);
         }
 
+        .home-bottom-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
         .btn-home-refresh-subtle {
             background: none;
             border: none;
@@ -407,10 +555,12 @@
             font-size: 0.85rem;
             text-decoration: underline;
             cursor: pointer;
-            opacity: 0.4;
+            opacity: 0.55;
             padding: 4px;
             display: inline-block;
-            margin: 0 auto;
+        }
+        .btn-home-refresh-subtle:hover {
+            opacity: 0.9;
         }
         .btn-home-refresh-subtle:active {
             color: var(--stop-red);
@@ -421,18 +571,18 @@
             background-color: var(--footer-blue);
             color: var(--text-bright);
             padding: 12px 15px;
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: bold;
             letter-spacing: 0.3px;
             border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.35;
             box-sizing: border-box;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         .footer-sub-note {
             display: block;
@@ -461,95 +611,201 @@
             100% { box-shadow: 0 0 20px 4px var(--stop-red); }
         }
 
-      /* ================= RESTORED PLAY OPTIONS MODAL OVERLAY SHEET ================= */
-.operations-modal-overlay {
-    position: fixed; 
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(5, 7, 10, 0.85);
-    display: none; 
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-    z-index: 1000;
-}
+        /* ================= PLAY OPTIONS MODAL ================= */
+        .operations-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 7, 10, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 1000;
+        }
 
-.operations-dialog-box {
-    background: #131a24;
-    border: 2px solid var(--panel-border);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 500px;
-    padding: 16px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-}
+        .operations-dialog-box {
+            background: #131a24;
+            border: 2px solid var(--panel-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--panel-border);
-    padding-bottom: 8px;
-}
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 8px;
+        }
 
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: var(--cue-gold);
-}
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--cue-gold);
+        }
 
-.btn-modal-close {
-    background: var(--footer-blue);
-    border: 1px solid var(--panel-border);
-    color: white;
-    font-weight: 900;
-    font-size: 1.1rem;
-    letter-spacing: 0.5px;
-    border-radius: 8px;
-    padding: 12px 24px;
-    cursor: pointer;
-}
+        .btn-modal-close {
+            background: var(--footer-blue);
+            border: 1px solid var(--panel-border);
+            color: white;
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
 
-.track-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
-}
+        .control-deck {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-.current-track-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--text-bright);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+        .track-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
 
-.running-time {
-    font-family: monospace;
-    font-size: 1.05rem;
-    color: var(--active-blue);
-    font-weight: bold;
-    flex-shrink: 0;
-}
+        .current-track-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-.volume-status-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
-}
+        .raw-filename-readout {
+            font-family: monospace;
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-.volume-pct-display {
-    font-weight: bold;
-    color: var(--active-blue);
-}
+        .running-time {
+            font-family: monospace;
+            font-size: 1.05rem;
+            color: var(--active-blue);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .timeline-slider {
+            width: 100%;
+            accent-color: var(--active-blue);
+            cursor: pointer;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-tactical {
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .btn-tactical:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .btn-tactical-play {
+            background: #1b5e34;
+            border-color: var(--play-green);
+        }
+        .btn-tactical-fade {
+            background: #6b1d1d;
+            border-color: var(--stop-red);
+        }
+
+        .volume-pad {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .volume-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .volume-pct-display {
+            font-weight: bold;
+            color: var(--active-blue);
+        }
+
+        .volume-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .btn-vol {
+            background: #1e293b;
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 10px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-vol.active {
+            background: var(--footer-blue);
+            border-color: var(--active-blue);
+            color: #ffffff;
+        }
+
+        .app-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e293b;
+            border: 1px solid var(--active-blue);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+        }
+        .app-toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .app-toast.toast-success {
+            border-color: var(--play-green);
+        }
+        .app-toast.toast-error {
+            border-color: var(--stop-red);
+        }
     </style>
 </head>
 <body>
@@ -559,33 +815,41 @@
     <div class="app-screen active-view" id="screenHome">
         <div class="home-scrolling-content-zone">
             <div class="home-header-banner">Lodge Music</div>
+            <div class="owner-admin-bar" id="ownerAdminBar"></div>
             <div class="home-switcher-container">
                 <div class="set-switcher-grid" id="setSwitcherRow"></div>
+                <div class="empty-sets-card" id="emptySetsState">
+                    <div style="font-weight:800; font-size:1.05rem; color: var(--cue-gold);">Cloud Configuration Empty</div>
+                    <div id="emptyMigrationControls" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
             </div>
         </div>
-        
+
         <div class="home-anchored-bottom-tray">
             <div class="ceremonial-footer">
                 <div>
                     I hope you find my app handy. Please share any requests or feedback.
                     <span class="footer-sub-note" style="margin-top: 4px;">WBro. Robert Billing PGSwdB GLHer</span>
                 </div>
-                
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 6px; margin-top: 4px;">
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 6px; margin-top: 2px;">
                     <span style="font-weight: normal; font-size: 0.95rem; color: var(--text-dim);">Allow Mobile Data Downloads:</span>
-                    <input type="checkbox" id="mobileDataToggleCheckbox" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--active-blue);" onchange="handleMobileDataPermissionToggle(this.checked)">
+                    <input type="checkbox" id="mobileDataToggleCheckbox" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--active-blue);">
                 </div>
             </div>
 
             <div class="home-action-row-container">
-                <button class="btn-home-share-primary" onclick="shareLodgeMusicApp()">🔗 Share App Connection</button>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim); opacity: 0.55;">
+                <button type="button" class="btn-home-share-primary" id="shareAppBtn">🔗 Share App Connection</button>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim); opacity: 0.65;">
                     <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: monospace; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
-                    <span>Build: <span style="font-family: monospace; color: var(--active-blue); font-weight: bold;">v53</span></span>
+                    <span>Build: <span style="font-family: monospace; color: var(--active-blue); font-weight: bold;">v56</span></span>
                 </div>
 
-                <button class="btn-home-refresh-subtle" onclick="executePwaServiceCacheClear()">reset / repair system storage</button>
+                <div class="home-bottom-links">
+                    <button type="button" class="btn-home-refresh-subtle" id="ownerSignInBtn">owner sign in</button>
+                    <button type="button" class="btn-home-refresh-subtle" id="resetStorageBtn">reset / repair system storage</button>
+                </div>
             </div>
         </div>
     </div>
@@ -593,8 +857,9 @@
 
     <div class="app-screen" id="screenConsole">
         <div class="screen-header-bar">
-            <button class="btn-header-back" onclick="navigateToHomeScreen()">◀ BACK</button>
+            <button type="button" class="btn-header-back" id="btnBackHome">◀ BACK</button>
             <div class="header-title-text" id="headerTitleDisplay">Lodge Music</div>
+            <button type="button" class="btn-header-edit" id="btnConsoleEditSet">✏️ Edit</button>
         </div>
 
         <div class="playlist-grid-container">
@@ -608,7 +873,7 @@
 
         <div class="cue-banner">
             <span class="cue-label">Press the button again to start playing</span>
-            <span class="cue-text" id="cueText">Loading configuration blueprints...</span>
+            <span class="cue-text" id="cueText">Loading configuration...</span>
         </div>
 
         <div class="lyrics-section-wrapper">
@@ -617,17 +882,17 @@
                     <div class="lyric-line">Select a track row sequence to begin.</div>
                 </div>
             </div>
-            <button class="btn-floating-deck-cog" onclick="openOperationsModal()">⚙️</button>
+            <button type="button" class="btn-floating-deck-cog" id="btnOpenOptions">⚙️</button>
         </div>
     </div>
 
 
     <!-- ================= CONSOLIDATED PLAY OPTIONS MODAL DIALOG ================= -->
-<div class="operations-modal-overlay" id="operationsModal">
+    <div class="operations-modal-overlay" id="operationsModal">
         <div class="operations-dialog-box">
             <div class="modal-header">
                 <span class="modal-title">🎛️ Play Options</span>
-                <button class="btn-modal-close" onclick="closeOperationsModal()">DONE</button>
+                <button type="button" class="btn-modal-close" id="btnCloseOptions">DONE</button>
             </div>
 
             <div class="control-deck">
@@ -635,15 +900,18 @@
                     <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; overflow: hidden;">
                         <span class="current-track-title" id="trackTitle">---</span>
                         <span class="raw-filename-readout" id="trackFilenameReadout">no_file.mp3</span>
+                        <span class="track-error-notice" id="trackErrorNotice"></span>
+                        <input type="file" id="missingAudioFileInput" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac" style="display: none;">
+                        <button type="button" id="uploadMissingAudioBtn" style="display: none; margin-top: 6px; background: var(--footer-blue); color: #ffffff; border: 1px solid var(--active-blue); border-radius: 6px; padding: 8px 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: left;">📁 Select / Upload Missing Audio File</button>
                     </div>
                     <span class="running-time" id="trackTime">0:00 / 0:00</span>
                 </div>
-                
-                <input type="range" class="timeline-slider" id="timelineProgress" min="0" max="100" value="0" oninput="handleManualTimelineSeek(this.value)">
-                
+
+                <input type="range" class="timeline-slider" id="timelineProgress" min="0" max="100" value="0">
+
                 <div class="action-grid">
-                    <button class="btn-tactical btn-tactical-play" id="playBtn" onclick="playCurrentTrack()" disabled>▶ PLAY</button>
-                    <button class="btn-tactical btn-tactical-fade" id="fadeBtn" onclick="fadeCurrentTrack()" disabled>■ STOP</button>
+                    <button type="button" class="btn-tactical btn-tactical-play" id="playBtn" disabled>▶ PLAY</button>
+                    <button type="button" class="btn-tactical btn-tactical-fade" id="fadeBtn" disabled>■ STOP</button>
                 </div>
             </div>
 
@@ -653,9 +921,9 @@
                     <span class="volume-pct-display" id="volumePct">Normal (100%)</span>
                 </div>
                 <div class="volume-btn-grid">
-                    <button class="btn-vol" id="volBtn-05" onclick="transitionToTargetVolume(0.05, '05', 'Very Quiet (5%)')">Very Quiet</button>
-                    <button class="btn-vol" id="volBtn-60" onclick="transitionToTargetVolume(0.60, '60', 'Quiet (60%)')">Quiet</button>
-                    <button class="btn-vol active" id="volBtn-100" onclick="transitionToTargetVolume(1.00, '100', 'Normal (100%)')">Normal</button>
+                    <button type="button" class="btn-vol" id="volBtn-05">Very Quiet</button>
+                    <button type="button" class="btn-vol" id="volBtn-60">Quiet</button>
+                    <button type="button" class="btn-vol active" id="volBtn-100">Normal</button>
                 </div>
             </div>
 
@@ -668,562 +936,8 @@
 
 </div>
 
-<script>
-    let tracks = [];
-    let dynamicSets = [];
-    let currentTrackIndex = 0;
-    
-    let audioCtx = null;
-    let audioCache = {}; 
-    let cachedBytesCounter = {}; 
-    let structuralBlueprintProfilesCache = {};
+<div class="app-toast" id="appToast"></div>
 
-    let currentSource = null;
-    let gainNode = null;
-    
-    let isPlaying = false;
-    let startTime = 0;
-    let pausedTime = 0;
-    let trackDuration = 0;
-    let timeUpdateInterval = null;
-    
-    let currentVolume = 1.0; 
-    let volumeFadeInterval = null; 
-    let fadeInterval = null; 
-
-    // DETERMINISTIC WEIGHT ESTIMATION DICTIONARY
-    const DETERMINISTIC_TRACK_WEIGHTS = {
-        "opening": 3.4, "closing": 4.1, "first": 2.8, "second": 3.1, "third": 3.9, 
-        "installed": 5.2, "anthem": 2.5, "vessel": 3.0, "procession": 4.5, "recessional": 3.8
-    };
-
-    async function initConsole() {
-        const checkbox = document.getElementById('mobileDataToggleCheckbox');
-        if (checkbox) {
-            checkbox.checked = localStorage.getItem('allowMobileDataDownloads') === 'true';
-        }
-
-        try {
-            const response = await fetch('sets.json?v=' + Date.now());
-            //const response = await fetch('sets.json');
-            dynamicSets = await response.json();
-            
-            if (dynamicSets.length > 0) {
-                buildSetSwitcherUI();
-                await updateOfflineDiskMetricDisplay(); 
-                
-                const urlParams = new URLSearchParams(window.location.search);
-                const targetSetId = urlParams.get('set');
-                if (targetSetId) {
-                    const matchedSet = dynamicSets.find(s => s.id.toString() === targetSetId.toString());
-                    if (matchedSet) {
-                        await switchCeremonialSet(matchedSet.file, matchedSet.id, matchedSet.label, true);
-                    }
-                } else {
-                    document.getElementById('screenHome').classList.add('active-view');
-                }
-            }
-        } catch (err) {
-            console.error("Initialization fault fetching master indices.");
-        }
-    }
-
-    async function updateOfflineDiskMetricDisplay() {
-        if (!('caches' in window)) return;
-        try {
-            const storageVault = await caches.open('lodge-music-v53'); 
-            const storedRequests = await storageVault.keys();
-            
-            let totalEstimatedMB = 0.08; 
-            
-            storedRequests.forEach(req => {
-                const filename = req.url.toLowerCase();
-                let matched = false;
-                
-                for (const [key, weight] of Object.entries(DETERMINISTIC_TRACK_WEIGHTS)) {
-                    if (filename.includes(key)) {
-                        totalEstimatedMB += weight;
-                        matched = true;
-                        break;
-                    }
-                }
-                if (!matched && (filename.endsWith('.mp3') || filename.endsWith('.wav'))) {
-                    totalEstimatedMB += 3.2; 
-                }
-            });
-
-            if (storedRequests.length > 5 && totalEstimatedMB < 10) {
-                totalEstimatedMB = 114.65; 
-            }
-
-            document.getElementById('diskStorageDisplay').innerText = totalEstimatedMB === 0.08 ? "0.00 MB" : totalEstimatedMB.toFixed(2) + " MB";
-        } catch(e) {
-            console.error("Storage metric update query failure.");
-        }
-    }
-
-    function buildSetSwitcherUI() {
-        const switcherRow = document.getElementById('setSwitcherRow');
-        switcherRow.innerHTML = '';
-        dynamicSets.forEach((set) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-set-switch';
-            btn.id = 'setBtn-' + set.id;
-            btn.innerText = set.label;
-            btn.onclick = () => { switchCeremonialSet(set.file, set.id, set.label, false); };
-            switcherRow.appendChild(btn);
-        });
-    }
-
-    async function switchCeremonialSet(jsonPath, setId, setLabel, isInitialBoot) {
-        stopAudioEngine();
-        if (fadeInterval) { clearInterval(fadeInterval); fadeInterval = null; }
-        if (volumeFadeInterval) { clearInterval(volumeFadeInterval); volumeFadeInterval = null; }
-
-        document.getElementById('headerTitleDisplay').innerText = setLabel;
-
-        const newUrl = window.location.pathname + '?set=' + setId;
-        window.history.pushState({ path: newUrl }, '', newUrl);
-
-        document.getElementById('screenHome').classList.remove('active-view');
-        document.getElementById('screenConsole').classList.add('active-view');
-
-        document.getElementById('cueText').innerText = "Syncing memory configurations... Please standby.";
-
-        if (structuralBlueprintProfilesCache[jsonPath]) {
-            tracks = structuralBlueprintProfilesCache[jsonPath];
-            buildPlaylistGrid(false);
-            loadTrack(0); 
-            await cacheAllAudioToRAM();
-            return;
-        }
-
-        try {
-            //const response = await fetch(jsonPath);
-            const response = await fetch(jsonPath + '?v=' + Date.now());
-            tracks = await response.json();
-            structuralBlueprintProfilesCache[jsonPath] = tracks;
-            
-            if (tracks.length > 0) {
-                buildPlaylistGrid(true);
-                loadTrack(0); 
-                await cacheAllAudioToRAM();
-            }
-        } catch (err) {
-            document.getElementById('cueText').innerText = 'Failed to process configuration blueprints layout profiles.';
-        }
-    }
-
-    function navigateToHomeScreen() {
-        if (fadeInterval) { clearInterval(fadeInterval); fadeInterval = null; }
-        if (volumeFadeInterval) { clearInterval(volumeFadeInterval); volumeFadeInterval = null; }
-        stopAudioEngine();
-        
-        document.getElementById('tickerTrackTitle').innerText = "None";
-        document.getElementById('trackTitle').innerText = "---";
-        document.getElementById('trackFilenameReadout').innerText = "no_file.mp3";
-        document.getElementById('timelineProgress').value = 0;
-        document.getElementById('trackTime').innerText = "0:00 / 0:00";
-        document.getElementById('cueText').innerText = "Select a track row sequence to begin.";
-        buildStaticTextPanel([]);
-
-        currentTrackIndex = 0;
-
-        window.history.pushState({}, '', window.location.pathname);
-        document.getElementById('screenConsole').classList.remove('active-view');
-        document.getElementById('screenHome').classList.add('active-view');
-        updateOfflineDiskMetricDisplay(); 
-        window.dispatchEvent(new Event('resize'));
-    }
-
-    function buildPlaylistGrid(forceDisabledState) {
-        const grid = document.getElementById('playlistGrid');
-        grid.innerHTML = '';
-        tracks.forEach((track, index) => {
-            const chip = document.createElement('div');
-            const chosenColor = track.color ? track.color.toLowerCase() : 'blue';
-            
-            if (forceDisabledState && !audioCache[track.file]) {
-                chip.className = 'nav-chip color-' + chosenColor + ' not-loaded';
-            } else {
-                chip.className = 'nav-chip color-' + chosenColor;
-                const words = track.title.split(' ');
-                if (words.some(word => word.length > 9)) chip.style.fontSize = '1.05rem';
-            }
-            
-            chip.id = 'chip-' + index;
-            chip.innerText = track.title; 
-            chip.onclick = () => { handleTrackSelection(index); };
-            grid.appendChild(chip); 
-        });
-    }
-
-    async function cacheAllAudioToRAM() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const allowMobileData = localStorage.getItem('allowMobileDataDownloads') === 'true';
-
-        for (let i = 0; i < tracks.length; i++) {
-            const track = tracks[i];
-            
-            if (audioCache[track.file]) {
-                activateLoadedButtonChip(i, track);
-                continue;
-            }
-
-            try {
-                // FIXED INTERNAL LOOKUP REQUEST: Strip mobile parameters before dispatching internally
-                const fetchUrl = allowMobileData ? track.file + '?forceMobile=true' : track.file;
-                const res = await fetch(fetchUrl);
-                
-                if (res.status === 403) {
-                    document.getElementById('cueText').innerText = "⚠️ Cellular download blocked. Toggle 'Allow Mobile Data' on the Home Screen to bypass.";
-                    continue;
-                }
-
-                const arrayBuffer = await res.arrayBuffer();
-                cachedBytesCounter[track.file] = arrayBuffer.byteLength;
-                calculateTotalMemoryUsageMetrics(); 
-
-                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                audioCache[track.file] = audioBuffer;
-                activateLoadedButtonChip(i, track);
-            } catch (e) {
-                console.error("RAM compilation asset lookup failed for:", track.file);
-            }
-        }
-    }
-
-    function handleMobileDataPermissionToggle(isAllowed) {
-        localStorage.setItem('allowMobileDataDownloads', isAllowed ? 'true' : 'false');
-        if (isAllowed && tracks.length > 0) {
-            cacheAllAudioToRAM();
-        }
-    }
-
-    function calculateTotalMemoryUsageMetrics() {
-        let grandTotalBytes = 0;
-        for (let key in cachedBytesCounter) {
-            grandTotalBytes += cachedBytesCounter[key];
-        }
-        const formatStr = (grandTotalBytes / (1024 * 1024)).toFixed(2) + " MB";
-        document.getElementById('modalMemoryValue').innerText = formatStr;
-    }
-
-    function activateLoadedButtonChip(index, track) {
-        const chip = document.getElementById('chip-' + index);
-        if (chip) {
-            const chosenColor = track.color ? track.color.toLowerCase() : 'blue';
-            chip.className = 'nav-chip color-' + chosenColor + ' ' + (index === currentTrackIndex ? 'active' : '');
-            
-            if (index === currentTrackIndex) {
-                const cachedBuffer = audioCache[track.file];
-                trackDuration = cachedBuffer ? cachedBuffer.duration : 0;
-                document.getElementById('trackTime').innerText = '0:00 / ' + formatTime(trackDuration);
-                playBtn.disabled = false;
-                playBtn.innerText = "▶ PLAY";
-            }
-        }
-    }
-
-    function openOperationsModal() {
-        document.getElementById('operationsModal').style.display = "flex";
-    }
-    function closeOperationsModal() {
-        document.getElementById('operationsModal').style.display = "none";
-    }
-
-    function handleTrackSelection(index) {
-        const clickedChip = document.getElementById('chip-' + index);
-        if (clickedChip && clickedChip.classList.contains('fading-now')) return; 
-
-        if (currentTrackIndex === index) {
-            if (isPlaying && !fadeInterval) {
-                fadeCurrentTrack();
-            } else {
-                playCurrentTrack();
-            }
-        } else {
-            if (isPlaying) { 
-                if (fadeInterval) { clearInterval(fadeInterval); fadeInterval = null; }
-                stopAudioEngine();  
-            } 
-            loadTrack(index); 
-        }
-    }
-
-    function loadTrack(index) {
-        if (fadeInterval) clearInterval(fadeInterval);
-        stopAudioEngine();
-        
-        document.querySelectorAll('.nav-chip').forEach(c => {
-            c.className = c.className.replace(/\b(active|playing-now|fading-now)\b/g, '').trim();
-        });
-        
-        const activeChip = document.getElementById('chip-' + index);
-        if (activeChip) activeChip.classList.add('active');
-
-        currentTrackIndex = index;
-        const track = tracks[index];
-
-        const cachedBuffer = audioCache[track.file];
-        trackDuration = cachedBuffer ? cachedBuffer.duration : 0;
-        pausedTime = 0;
-
-        document.getElementById('tickerTrackTitle').innerText = track.title;
-        document.getElementById('trackTitle').innerText = track.title;
-        document.getElementById('trackFilenameReadout').innerText = track.file.split('/').pop();
-        
-        document.getElementById('cueText').innerText = track.cue || "No special cues assigned.";
-        buildStaticTextPanel(track.lyrics || []);
-        
-        document.getElementById('timelineProgress').value = 0;
-        document.getElementById('trackTime').innerText = '0:00 / ' + formatTime(trackDuration);
-
-        if (cachedBuffer) {
-            playBtn.disabled = false;
-            playBtn.innerText = "▶ PLAY";
-        } else {
-            playBtn.disabled = true;
-            playBtn.innerText = "⏳ LOADING AUDIO...";
-        }
-        fadeBtn.disabled = true;
-    }
-
-    function buildStaticTextPanel(lines) {
-        const panel = document.getElementById('lyricsPanel');
-        panel.innerHTML = '';
-        if (lines.length === 0) {
-            panel.innerHTML = '<div class="lyric-line" style="color:var(--text-dim); margin-top:20px;">(Instrumental / No Words)</div>';
-            return;
-        }
-        lines.forEach((line) => {
-            const div = document.createElement('div');
-            div.className = 'lyric-line';
-            div.innerText = line;
-            panel.appendChild(div);
-        });
-    }
-
-    function playCurrentTrack() {
-        if (fadeInterval) clearInterval(fadeInterval);
-        if (isPlaying) return;
-
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-
-        const track = tracks[currentTrackIndex];
-        const cachedBuffer = audioCache[track.file];
-        if (!cachedBuffer) return;
-
-        currentSource = audioCtx.createBufferSource();
-        currentSource.buffer = cachedBuffer;
-
-        gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
-
-        currentSource.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        currentSource.start(0, pausedTime);
-        startTime = audioCtx.currentTime - pausedTime;
-        isPlaying = true;
-
-        playBtn.disabled = true;
-        playBtn.innerText = "▶ PLAYING";
-        fadeBtn.disabled = false;
-
-        const activeChip = document.getElementById('chip-' + currentTrackIndex);
-        if (activeChip) {
-            activeChip.classList.remove('active', 'fading-now');
-            activeChip.classList.add('playing-now');
-        }
-
-        clearInterval(timeUpdateInterval);
-        timeUpdateInterval = setInterval(updateTimelineProgress, 100);
-    }
-
-    function handleManualTimelineSeek(percentValue) {
-        if (!tracks[currentTrackIndex]) return;
-        const cachedBuffer = audioCache[tracks[currentTrackIndex].file];
-        if (!cachedBuffer) return;
-
-        const targetSeconds = (percentValue / 100) * cachedBuffer.duration;
-        pausedTime = targetSeconds;
-        document.getElementById('trackTime').innerText = formatTime(targetSeconds) + ' / ' + formatTime(cachedBuffer.duration);
-
-        if (isPlaying) {
-            if (currentSource) {
-                try { currentSource.stop(); } catch(e){}
-                currentSource = null;
-            }
-            currentSource = audioCtx.createBufferSource();
-            currentSource.buffer = cachedBuffer;
-            gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
-            currentSource.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            currentSource.start(0, targetSeconds);
-            startTime = audioCtx.currentTime - targetSeconds;
-        }
-    }
-
-    // TRANSITION VOLUME LEVEL INTERFACE
-    function transitionToTargetVolume(targetVol, btnIdSuffix, displayLabelText) {
-        document.querySelectorAll('.btn-vol').forEach(b => b.classList.remove('active'));
-        document.getElementById('volBtn-' + btnIdSuffix).classList.add('active');
-        document.getElementById('volumePct').innerText = displayLabelText;
-
-        if (volumeFadeInterval) clearInterval(volumeFadeInterval);
-        if (!isPlaying || !gainNode || fadeInterval) {
-            currentVolume = targetVol;
-            return;
-        }
-
-        const transitionDuration = 1200; 
-        const stepTime = 40; 
-        const steps = transitionDuration / stepTime;
-        const volumeDelta = targetVol - currentVolume;
-        const volStep = volumeDelta / steps;
-        let runningVol = currentVolume;
-
-        volumeFadeInterval = setInterval(() => {
-            stepsLeft = Math.abs(targetVol - runningVol);
-            if (stepsLeft > Math.abs(volStep)) {
-                runningVol += volStep;
-                if (gainNode && isPlaying) gainNode.gain.setValueAtTime(runningVol, audioCtx.currentTime);
-            } else {
-                clearInterval(volumeFadeInterval);
-                volumeFadeInterval = null;
-                runningVol = targetVol;
-                if (gainNode && isPlaying) gainNode.gain.setValueAtTime(runningVol, audioCtx.currentTime);
-            }
-            currentVolume = runningVol; 
-        }, stepTime);
-    }
-
-    function updateTimelineProgress() {
-        if (!isPlaying) return;
-        const currentElapsed = audioCtx.currentTime - startTime;
-        
-        if (currentElapsed >= trackDuration) {
-            handleTrackPlaybackCompletion();
-            return;
-        }
-        const pct = (currentElapsed / trackDuration) * 100;
-        document.getElementById('timelineProgress').value = pct;
-        document.getElementById('trackTime').innerText = formatTime(currentElapsed) + ' / ' + formatTime(trackDuration);
-    }
-
-    function handleTrackPlaybackCompletion() {
-        stopAudioEngine();
-        if (currentTrackIndex + 1 < tracks.length) {
-            loadTrack(currentTrackIndex + 1);
-        }
-    }
-
-    document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible" && audioCtx && audioCtx.state === "interrupted") {
-            audioCtx.resume();
-        }
-    });
-
-    function stopAudioEngine() {
-        isPlaying = false;
-        clearInterval(timeUpdateInterval);
-        if (currentSource) {
-            try { currentSource.stop(); } catch(e){}
-            currentSource = null;
-        }
-        const activeChip = document.getElementById('chip-' + currentTrackIndex);
-        if (activeChip) {
-            activeChip.className = activeChip.className.replace(/\b(playing-now|fading-now)\b/g, '').trim();
-        }
-    }
-
-    function fadeCurrentTrack() {
-        if (!isPlaying || fadeInterval) return;
-        fadeBtn.disabled = true;
-        const activeChip = document.getElementById('chip-' + currentTrackIndex);
-        if (activeChip) {
-            activeChip.classList.remove('playing-now');
-            activeChip.classList.add('fading-now');
-        }
-
-        const fadeDuration = 1.5; 
-        const stepTime = 50; 
-        const steps = (fadeDuration * 1000) / stepTime;
-        const volStep = currentVolume / steps;
-        let runningVol = currentVolume;
-
-        fadeInterval = setInterval(() => {
-            if (runningVol > volStep) {
-                runningVol -= volStep;
-                if (gainNode) gainNode.gain.setValueAtTime(runningVol, audioCtx.currentTime);
-            } else {
-                clearInterval(fadeInterval);
-                fadeInterval = null;
-                stopAudioEngine();
-                playBtn.disabled = false;
-                playBtn.innerText = "▶ PLAY";
-                if (currentTrackIndex + 1 < tracks.length) {
-                    loadTrack(currentTrackIndex + 1);
-                }
-            }
-        }, stepTime);
-    }
-
-    function shareLodgeMusicApp() {
-        const shareUrl = window.location.origin + window.location.pathname;
-        const shareTitle = "Lodge Music";
-        const shareText = "Here is the Lodge Music app for running ceremonial audio straight from your phone or tablet.";
-
-        if (navigator.share) {
-            navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
-            .then(() => console.log('Successful share event.'))
-            .catch((error) => console.log('Sharing cancelled:', error));
-        } else {
-            const emailSubject = encodeURIComponent(shareTitle);
-            const emailBody = encodeURIComponent(shareText + '\n\nAccess the app here: ' + shareUrl);
-            window.location.href = 'mailto:?subject=' + emailSubject + '&body=' + emailBody;
-        }
-    }
-
-    function executePwaServiceCacheClear() {
-        if ('caches' in window) {
-            caches.keys().then((names) => {
-                for (let name of names) caches.delete(name);
-            });
-        }
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then((registrations) => {
-                for (let registration of registrations) {
-                    registration.unregister();
-                }
-            });
-        }
-        structuralBlueprintProfilesCache = {};
-        for (let key in audioCache) delete audioCache[key];
-        audioCache = {};
-        cachedBytesCounter = {};
-
-        window.history.pushState({}, '', window.location.pathname);
-
-        setTimeout(() => {
-            window.location.reload(true);
-        }, 150);
-    }
-
-    function formatTime(secs) {
-        if (isNaN(secs) || secs === 0) return "0:00";
-        const m = Math.floor(secs / 60);
-        const s = Math.floor(secs % 60);
-        return m + ':' + (s < 10 ? '0' : '') + s;
-    }
-
-    window.onload = initConsole;
-</script>
+<script type="module" src="/src/console.ts"></script>
 </body>
 </html>

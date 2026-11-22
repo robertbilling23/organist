@@ -3,433 +3,682 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ceremonial Configuration Console</title>
+    <title>Lodge Music — Configuration Studio</title>
+    <meta name="description" content="Owner-only configuration studio for Lodge Music sets, button colors, text, cues, and ordering.">
     <style>
         :root {
             --bg-dark: #0f141c;
             --panel-bg: #161f2b;
-            --panel-border: #233145;
+            --panel-border: #2c3e55;
             --text-bright: #ffffff;
             --text-dim: #9ab0c7;
             --active-blue: #00bcd4;
             --play-green: #2ecc71;
             --stop-red: #e74c3c;
             --cue-gold: #f39c12;
+            --btn-darkblue: #26354a;
+            --btn-blue: #4a6785;
+            --btn-yellow: #7a5a13;
+            --btn-green: #1b4f2e;
+            --btn-red: #661a1a;
+            --btn-orange: #7a3711;
+            --btn-purple: #3f1b69;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-bright);
             margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 18px;
         }
 
         .editor-container {
-            max-width: 1100px;
+            max-width: 1180px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .header-panel {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 16px 20px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
 
-        h1 { margin: 0; font-size: 1.5rem; color: var(--active-blue); }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
 
-        .select-style {
-            background: #1e293b;
-            color: var(--text-bright);
-            border: 1px solid var(--panel-border);
-            padding: 10px 15px;
+        h1 {
+            margin: 0;
+            font-size: 1.35rem;
+            color: var(--active-blue);
+        }
+
+        .header-subtitle {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+
+        .header-user-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .owner-pill {
+            background: rgba(46, 204, 113, 0.14);
+            border: 1px solid var(--play-green);
+            color: var(--play-green);
+            padding: 5px 10px;
             border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
         }
 
-        .main-workspace {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .auth-gate-panel {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 16px;
         }
 
-        @media(max-width: 768px) {
-            .main-workspace { grid-template-columns: 1fr; }
+        .auth-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .auth-card h2 {
+            margin: 0;
+            color: var(--cue-gold);
+        }
+
+        .auth-card p {
+            margin: 0;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .auth-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .studio-workspace {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .workspace-panel {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 14px;
+        }
+
+        .empty-migration-banner {
+            display: none;
+            background: rgba(0, 188, 212, 0.1);
+            border: 2px solid var(--active-blue);
+            border-radius: 10px;
+            padding: 16px 20px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .set-toolbar {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 14px;
+            align-items: end;
+        }
+        @media (max-width: 820px) {
+            .set-toolbar { grid-template-columns: 1fr; }
+        }
+
+        .inline-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .main-workspace {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .main-workspace { grid-template-columns: 1fr; }
         }
 
         .panel-title {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1.1rem;
+            font-weight: 800;
             border-bottom: 1px dashed var(--panel-border);
             padding-bottom: 8px;
-            margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        /* Track List Item Bars */
         .track-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-height: 500px;
+            gap: 8px;
+            max-height: 520px;
             overflow-y: auto;
+            padding-right: 4px;
         }
 
         .track-item {
-            background: #1e293b;
+            background: #1c2738;
             border: 1px solid var(--panel-border);
-            border-radius: 6px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: border-color 0.15s, background 0.15s;
         }
-        .track-item:hover, .track-item.selected {
+        .track-item:hover {
+            border-color: #4f6b8f;
+        }
+        .track-item.selected {
             border-color: var(--active-blue);
-            background: rgba(0, 188, 212, 0.05);
+            background: rgba(0, 188, 212, 0.1);
+        }
+        .track-item.dragging {
+            opacity: 0.45;
+        }
+        .track-item.drag-over {
+            border-top: 3px solid var(--cue-gold);
         }
 
-        .track-meta { display: flex; flex-direction: column; gap: 4px; }
-        .track-title-text { font-weight: bold; font-size: 1.1rem; }
-        .track-file-subtext { font-size: 0.8rem; color: var(--text-dim); font-family: monospace; }
+        .track-row-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+        .drag-handle {
+            color: var(--text-dim);
+            cursor: grab;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 2px 4px;
+            user-select: none;
+        }
+        .color-swatch-dot {
+            width: 14px;
+            height: 36px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .track-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+        .track-title-text {
+            font-weight: 800;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .order-num {
+            color: var(--cue-gold);
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-right: 4px;
+        }
+        .track-file-subtext {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        .track-order-actions { display: flex; gap: 5px; }
+        .track-order-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .btn-order {
+            background: #2b3a4f;
+            border: 1px solid var(--panel-border);
+            color: #ffffff;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-order:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
 
-        /* General Form Layouts */
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 0.9rem; font-weight: bold; color: var(--text-dim); }
-        
+        /* Live 3-column grid preview */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: #0d121a;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .preview-chip {
+            border: 2px solid var(--panel-border);
+            color: #ffffff;
+            border-radius: 6px;
+            height: 52px;
+            padding: 4px 6px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+        .preview-chip.selected {
+            border-color: #ffffff;
+            box-shadow: 0 0 12px rgba(255,255,255,0.65);
+        }
+        .preview-chip.color-darkblue { background-color: var(--btn-darkblue); }
+        .preview-chip.color-blue     { background-color: var(--btn-blue); }
+        .preview-chip.color-yellow   { background-color: var(--btn-yellow); }
+        .preview-chip.color-green    { background-color: var(--btn-green); }
+        .preview-chip.color-red      { background-color: var(--btn-red); }
+        .preview-chip.color-orange   { background-color: var(--btn-orange); }
+        .preview-chip.color-purple   { background-color: var(--btn-purple); }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dim);
+        }
         input[type="text"], textarea, select {
-            background: #1e293b;
+            background: #1c2738;
             color: var(--text-bright);
             border: 1px solid var(--panel-border);
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.96rem;
             outline: none;
+            width: 100%;
+            font-family: inherit;
         }
         input[type="text"]:focus, textarea:focus, select:focus {
             border-color: var(--active-blue);
         }
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+            line-height: 1.4;
+        }
 
-        textarea { resize: vertical; min-height: 120px; font-weight: bold; }
-
-        /* Tactical Control Buttons */
-        .btn-utility {
-            padding: 10px 16px;
-            border: none;
+        .color-swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+            gap: 8px;
+        }
+        .color-swatch-btn {
+            border: 2px solid transparent;
             border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.95rem;
+            padding: 10px 6px;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.82rem;
             cursor: pointer;
-            color: white;
+            text-align: center;
+            transition: transform 0.1s, box-shadow 0.15s;
+        }
+        .color-swatch-btn.active {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(255,255,255,0.65);
+            transform: scale(1.03);
+        }
+
+        .button-live-sample {
+            height: 58px;
+            border-radius: 8px;
+            border: 2px solid var(--panel-border);
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #ffffff;
+            padding: 0 12px;
+            text-align: center;
         }
-        .btn-add { background-color: var(--play-green); }
-        .btn-delete { background-color: var(--stop-red); }
-        .btn-blue { background-color: #34495e; }
-        .btn-copy { background-color: var(--active-blue); color: var(--bg-dark); font-size: 1.1rem; padding: 14px; width: 100%; justify-content: center;}
 
-        /* Output Box Layout */
-        .output-box {
-            background: #090d14;
-            color: #a5b4fc;
-            font-family: monospace;
-            padding: 15px;
+        .btn-utility {
+            padding: 10px 14px;
+            border: 1px solid transparent;
             border-radius: 6px;
-            border: 1px solid var(--panel-border);
-            white-space: pre-wrap;
-            max-height: 250px;
-            overflow-y: auto;
-            font-size: 0.85rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
         }
+        .btn-utility:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .btn-compact {
+            padding: 7px 11px;
+            font-size: 0.84rem;
+        }
+        .btn-primary {
+            background: var(--active-blue);
+            color: #05131a;
+        }
+        .btn-secondary {
+            background: #233145;
+            border-color: var(--panel-border);
+            color: #ffffff;
+        }
+        .btn-add {
+            background: #1b6b3a;
+            border-color: var(--play-green);
+        }
+        .btn-delete {
+            background: #732020;
+            border-color: var(--stop-red);
+        }
+        .btn-gold {
+            background: #8a5b0c;
+            border-color: var(--cue-gold);
+        }
+
+        .save-badge {
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+        .badge-clean { background: #1e293b; color: var(--text-dim); }
+        .badge-dirty { background: rgba(243, 156, 18, 0.2); color: var(--cue-gold); }
+        .badge-saving { background: rgba(0, 188, 212, 0.2); color: var(--active-blue); }
+        .badge-saved { background: rgba(46, 204, 113, 0.2); color: var(--play-green); }
+
+        .confirm-inline {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(231, 76, 60, 0.14);
+            border: 1px solid var(--stop-red);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+        }
+
+        .empty-placeholder {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 16px;
+            font-size: 0.92rem;
+        }
+
+        .editor-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            border: 1px solid var(--active-blue);
+            color: #ffffff;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(15px);
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 2000;
+            max-width: 90%;
+        }
+        .editor-toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .editor-toast.toast-success { border-color: var(--play-green); }
+        .editor-toast.toast-error { border-color: var(--stop-red); }
     </style>
 </head>
 <body>
 
 <div class="editor-container">
     <div class="header-panel">
-        <div>
-            <h1>Ceremonial Data Management Portal</h1>
-            <div style="color: var(--text-dim); font-size: 0.85rem; margin-top: 4px;">Configure on-screen track properties dynamically</div>
+        <div class="header-left">
+            <a href="/" class="btn-utility btn-secondary btn-compact">◀ Public Player</a>
+            <div>
+                <h1>Lodge Music Configuration Studio</h1>
+                <div class="header-subtitle">Edit button text, colors, audio files, cues, lyrics, and order</div>
+            </div>
         </div>
-        <div>
-            <select class="select-style" id="setSelect" onchange="loadChosenPlaylist(this.value)">
-                <option value="">-- Select a Set --</option>
-            </select>
-        </div>
+        <div class="header-user-status" id="headerUserStatus"></div>
     </div>
 
-    <div class="main-workspace">
+    <div class="auth-gate-panel" id="authGatePanel"></div>
+
+    <div class="studio-workspace" id="studioWorkspace">
+
+        <div class="empty-migration-banner" id="emptyMigrationBanner">
+            <div>
+                <div style="font-weight:900; font-size:1.05rem; color: var(--active-blue);">Move Your Current Configuration to Cloud Storage</div>
+                <div style="color: var(--text-dim); font-size:0.9rem; margin-top:3px;">Your cloud database has no sets yet. Click to import <code>sets.json</code> and all existing ceremonial sets.</div>
+            </div>
+            <button type="button" class="btn-utility btn-primary" id="btnEmptyMigrateNow">📦 Import Current Configuration</button>
+        </div>
+
+        <!-- Set Management & Migration Bar -->
         <div class="workspace-panel">
             <div class="panel-title">
-                <span>Ceremonial Sequence Tracklist</span>
-                <button class="btn-utility btn-add" onclick="addNewBlankTrack()">➕ Add Track</button>
+                <span>Ceremonial Sets</span>
+                <div class="inline-row">
+                    <span id="setOrderInfo" style="font-size:0.85rem; color: var(--text-dim);"></span>
+                    <button type="button" class="btn-utility btn-secondary btn-compact" id="btnToggleMigrationPanel">📦 Migration &amp; JSON Tools</button>
+                </div>
             </div>
-            <div class="track-list" id="trackListContainer">
-                <div style="color: var(--text-dim); text-align: center; padding: 4px;">Select a ceremonial workspace set from the top dropdown to map files...</div>
+
+            <div class="set-toolbar">
+                <div class="form-group">
+                    <label>Active Set</label>
+                    <div class="inline-row">
+                        <select id="setSelect" style="flex:1;"></select>
+                        <button type="button" class="btn-order" id="btnMoveSetUp" title="Move Set Earlier">▲</button>
+                        <button type="button" class="btn-order" id="btnMoveSetDown" title="Move Set Later">▼</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Rename Active Set</label>
+                    <div class="inline-row">
+                        <input type="text" id="setRenameInput" maxlength="80" placeholder="Set label..." style="flex:1;">
+                        <button type="button" class="btn-utility btn-secondary btn-compact" id="btnRenameSet">Save Name</button>
+                        <button type="button" class="btn-utility btn-delete btn-compact" id="btnDeleteSet">Delete Set</button>
+                        <div class="confirm-inline" id="deleteSetConfirmBox">
+                            <span>Delete set &amp; all buttons?</span>
+                            <button type="button" class="btn-utility btn-delete btn-compact" id="btnConfirmDeleteSet">Yes</button>
+                            <button type="button" class="btn-utility btn-secondary btn-compact" id="btnCancelDeleteSet">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inline-row" style="border-top: 1px solid var(--panel-border); padding-top: 10px;">
+                <input type="text" id="newSetLabelInput" maxlength="80" placeholder="New set name (e.g., Installation, Mark Degree)..." style="flex:1; max-width:360px;">
+                <button type="button" class="btn-utility btn-add btn-compact" id="btnCreateSet">➕ Add New Set</button>
+            </div>
+
+            <!-- Collapsible Migration & JSON Import/Export Panel -->
+            <div id="migrationPanelBody" style="display:none; flex-direction:column; gap:12px; background:#111722; border:1px solid var(--panel-border); border-radius:8px; padding:14px;">
+                <div style="font-weight:800; color: var(--cue-gold);">Move Existing JSON Configuration to Cloud</div>
+                <div class="inline-row" style="gap:16px;">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="chkIncludeFiller"> Also import <code>filler.json</code>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="chkIncludeMark"> Also import <code>mark.json</code>
+                    </label>
+                </div>
+                <div class="inline-row">
+                    <button type="button" class="btn-utility btn-primary btn-compact" id="btnMigrateMerge">Import Missing Sets from JSON</button>
+                    <button type="button" class="btn-utility btn-gold btn-compact" id="btnMigrateReplace">Overwrite All Cloud Sets from JSON</button>
+                    <div class="confirm-inline" id="replaceConfirmBox">
+                        <span>Overwrite all cloud sets?</span>
+                        <button type="button" class="btn-utility btn-delete btn-compact" id="btnConfirmReplace">Yes, Replace</button>
+                        <button type="button" class="btn-utility btn-secondary btn-compact" id="btnCancelReplace">Cancel</button>
+                    </div>
+                    <span id="migrationStatusText" style="font-size:0.85rem; color: var(--text-dim);"></span>
+                </div>
+
+                <div class="inline-row" style="border-top:1px dashed var(--panel-border); padding-top:10px;">
+                    <input type="file" id="importJsonFileInput" accept=".json,application/json" style="display:none;">
+                    <button type="button" class="btn-utility btn-secondary btn-compact" id="btnImportJsonToSet">📥 Append JSON File to Active Set</button>
+                    <button type="button" class="btn-utility btn-secondary btn-compact" id="btnExportSetJson">📤 Download Active Set Backup (.json)</button>
+                </div>
             </div>
         </div>
 
-        <div class="workspace-panel" id="propertiesPanel" style="opacity: 0.5; pointer-events: none;">
-            <div class="panel-title">
-                <span>Property Editor Form</span>
-                <button class="btn-utility btn-delete" onclick="deleteSelectedTrack()">🗑 Delete Track</button>
-            </div>
-            
-            <div class="form-group">
-                <label>Track Display Name (Clear text, numbers prefix hidden automatically)</label>
-                <input type="text" id="editTitle" oninput="updateTrackProperty('title', this.value)">
+        <!-- Main Split Workspace: Reorderable Button List + Property Editor -->
+        <div class="main-workspace">
+            <div class="workspace-panel">
+                <div class="panel-title">
+                    <span>Buttons &amp; Order <span id="trackCountBadge" style="font-size:0.82rem; color: var(--text-dim); font-weight:normal;"></span></span>
+                    <button type="button" class="btn-utility btn-add btn-compact" id="btnAddTrack">➕ Add Button</button>
+                </div>
+                <div style="font-size:0.82rem; color: var(--text-dim);">Drag rows or use ▲ / ▼ arrows to reorder. Click any button to edit.</div>
+                <div class="track-list" id="trackListContainer"></div>
+
+                <div class="panel-title" style="margin-top:6px;">
+                    <span>Live Grid Preview (3 Columns)</span>
+                </div>
+                <div class="preview-grid" id="liveGridPreview"></div>
             </div>
 
-            <div class="form-group">
-                <label>Audio File Location Path (e.g., audio/opening-ode.mp3)</label>
-                <input type="text" id="editFile" oninput="updateTrackProperty('file', this.value)">
-            </div>
+            <div class="workspace-panel" id="propertiesPanel" style="opacity: 0.45; pointer-events: none;">
+                <div class="panel-title">
+                    <div class="inline-row">
+                        <span>Button Properties</span>
+                        <span class="save-badge badge-clean" id="saveStateBadge">Synced</span>
+                    </div>
+                    <div class="inline-row">
+                        <button type="button" class="btn-utility btn-delete btn-compact" id="btnDeleteTrack">🗑 Delete</button>
+                        <div class="confirm-inline" id="deleteTrackConfirmBox">
+                            <span>Delete?</span>
+                            <button type="button" class="btn-utility btn-delete btn-compact" id="btnConfirmDeleteTrack">Yes</button>
+                            <button type="button" class="btn-utility btn-secondary btn-compact" id="btnCancelDeleteTrack">No</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label>Button Background Base Color Variant</label>
-                <select id="editColor" onchange="updateTrackProperty('color', this.value)">
-                    <option value="blue">Blue (Standard)</option>
-                    <option value="yellow">Yellow</option>
-                    <option value="green">Green</option>
-                    <option value="red">Red</option>
-                    <option value="orange">Orange</option>
-                    <option value="purple">Purple</option>
-                </select>
-            </div>
+                <div class="button-live-sample" id="buttonLiveSample" style="background-color: var(--btn-blue);">Select a button</div>
 
-            <div class="form-group">
-                <label>When to Press Play (Visual Directives Banner Cue Text)</label>
-                <input type="text" id="editCue" oninput="updateTrackProperty('cue', this.value)">
-            </div>
+                <div class="form-group">
+                    <label for="editTitle">Button Text</label>
+                    <input type="text" id="editTitle" maxlength="100" placeholder="e.g., Opening. SMIB">
+                </div>
 
-            <div class="form-group">
-                <label>On-Screen Display Lyrics / Text Lines (One line per row split)</label>
-                <textarea id="editLyrics" oninput="updateTrackLyricsSplit(this.value)" placeholder="Enter lyric lines here..."></textarea>
+                <div class="form-group">
+                    <label>Button Color</label>
+                    <div class="color-swatch-grid" id="colorSwatchGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editFile">Audio File Path</label>
+                    <input type="text" id="editFile" maxlength="300" list="audioFilesDatalist" placeholder="e.g., audio/1-Open-1st-SMIB-Faster.mp3">
+                    <datalist id="audioFilesDatalist"></datalist>
+
+                    <div class="inline-row" style="margin-top:4px;">
+                        <select id="audioFilePickerSelect" style="flex:1; min-width:180px;"></select>
+                        <input type="file" id="uploadAudioAssetInput" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac" style="display:none;">
+                        <button type="button" class="btn-utility btn-secondary btn-compact" id="btnUploadAudioAsset">📁 Upload Audio</button>
+                        <button type="button" class="btn-utility btn-secondary btn-compact" id="btnPreviewAudio">▶ Preview Audio</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCue">Cue Banner Directive</label>
+                    <input type="text" id="editCue" maxlength="500" placeholder="When to press play...">
+                </div>
+
+                <div class="form-group">
+                    <label for="editLyrics">On-Screen Lyrics / Notes (One line per row)</label>
+                    <textarea id="editLyrics" placeholder="Enter lyrics or ceremonial reminders..."></textarea>
+                </div>
+
+                <button type="button" class="btn-utility btn-primary" id="btnSaveTrack" style="width:100%; padding:13px; font-size:1rem;">💾 Save Button Changes</button>
             </div>
         </div>
-    </div>
 
-    <div class="workspace-panel">
-        <div class="panel-title">Export Dynamic Code Matrix Target</div>
-        <div class="output-box" id="jsonOutput">Select or build assets to monitor raw script streams...</div>
-        <button class="btn-utility btn-copy" onclick="copyFormattedJSONToClipboard()">📋 Copy Formatted JSON Code</button>
     </div>
 </div>
 
-<script>
-    let tracksArray = [];
-    let activeTrackIndex = null;
+<div class="editor-toast" id="editorToast"></div>
 
-    // 1. Core initialization configuration loading map values instantly
-    async function initEditor() {
-        try {
-            const response = await fetch('sets.json');
-            const sets = await response.json();
-            const selector = document.getElementById('setSelect');
-            
-            sets.forEach(set => {
-                const opt = document.createElement('option');
-                opt.value = set.file;
-                opt.innerText = set.label;
-                selector.appendChild(opt);
-            });
-        } catch (err) {
-            alert("Error running init routines. Ensure sets.json exists at the root folder level location.");
-        }
-    }
-
-    // 2. Fetch chosen data mapping arrays from root path profiles
-    async function loadChosenPlaylist(filename) {
-        if (!filename) {
-            document.getElementById('trackListContainer').innerHTML = `<div style="color: var(--text-dim); text-align: center;">Select a ceremonial workspace set...</div>`;
-            disablePropertiesPanel();
-            return;
-        }
-        
-        try {
-            const response = await fetch(filename);
-            tracksArray = await response.json();
-            activeTrackIndex = null;
-            disablePropertiesPanel();
-            renderTrackListUi();
-            updateJsonExportPreview();
-        } catch (err) {
-            // Setup blank framework array context fallback if targeted layout doesn't exist yet
-            tracksArray = [];
-            activeTrackIndex = null;
-            disablePropertiesPanel();
-            renderTrackListUi();
-            updateJsonExportPreview();
-        }
-    }
-
-    // 3. Render left panel tracking rows
-    function renderTrackListUi() {
-        const container = document.getElementById('trackListContainer');
-        container.innerHTML = '';
-
-        if (tracksArray.length === 0) {
-            container.innerHTML = `<div style="color: var(--text-dim); text-align: center; padding: 10px;">No tracks in this file. Click "Add Track" to start.</div>`;
-            return;
-        }
-
-        tracksArray.forEach((track, idx) => {
-            const div = document.createElement('div');
-            div.className = `track-item ${activeTrackIndex === idx ? 'selected' : ''}`;
-            div.onclick = (e) => {
-                if (e.target.tagName !== 'BUTTON') { loadTrackPropertiesToForm(idx); }
-            };
-
-            div.innerHTML = `
-                <div class="track-meta">
-                    <span class="track-title-text">${track.title || '(Untitled Track)'}</span>
-                    <span class="track-file-subtext">${track.file || 'no-file-mapped.mp3'}</span>
-                </div>
-                <div class="track-order-actions">
-                    <button class="btn-utility btn-blue" style="padding: 6px 10px;" onclick="moveTrackOrder(${idx}, -1)">▲</button>
-                    <button class="btn-utility btn-blue" style="padding: 6px 10px;" onclick="moveTrackOrder(${idx}, 1)">▼</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    // 4. Mount selected dataset targets right inside form parameters
-    function loadTrackPropertiesToForm(index) {
-        activeTrackIndex = index;
-        
-        // Highlights the clicked tracker row inside UI mapping sheets
-        document.querySelectorAll('.track-item').forEach((item, idx) => {
-            item.classList.toggle('selected', idx === index);
-        });
-
-        const track = tracksArray[index];
-        const panel = document.getElementById('propertiesPanel');
-        panel.style.opacity = "1";
-        panel.style.pointerEvents = "auto";
-
-        document.getElementById('editTitle').value = track.title || '';
-        document.getElementById('editFile').value = track.file || '';
-        document.getElementById('editColor').value = track.color || 'blue';
-        document.getElementById('editCue').value = track.cue || '';
-        document.getElementById('editLyrics').value = track.lyrics ? track.lyrics.join('\n') : '';
-    }
-
-    function disablePropertiesPanel() {
-        const panel = document.getElementById('propertiesPanel');
-        panel.style.opacity = "0.5";
-        panel.style.pointerEvents = "none";
-        document.getElementById('editTitle').value = '';
-        document.getElementById('editFile').value = '';
-        document.getElementById('editCue').value = '';
-        document.getElementById('editLyrics').value = '';
-    }
-
-    // 5. Live update event logic routines
-    function updateTrackProperty(property, value) {
-        if (activeTrackIndex === null) return;
-        tracksArray[activeTrackIndex][property] = value;
-        
-        // Re-render subtext changes dynamically without blowing away active form selections
-        const item = document.querySelectorAll('.track-item')[activeTrackIndex];
-        if (item) {
-            if (property === 'title') item.querySelector('.track-title-text').innerText = value || '(Untitled Track)';
-            if (property === 'file') item.querySelector('.track-file-subtext').innerText = value || 'no-file-mapped.mp3';
-        }
-        updateJsonExportPreview();
-    }
-
-    function updateTrackLyricsSplit(textValue) {
-        if (activeTrackIndex === null) return;
-        // Splits rows cleanly based on standard text return string spacing inputs
-        tracksArray[activeTrackIndex].lyrics = textValue.split('\n').filter(line => line.trim() !== '');
-        updateJsonExportPreview();
-    }
-
-    // 6. Append structural actions blocks
-    function addNewBlankTrack() {
-        const blankTrack = {
-            "id": "track_" + Date.now(),
-            "title": "New Music Entry",
-            "color": "blue",
-            "file": "audio/filename.mp3",
-            "cue": "Enter timing directive guidelines here...",
-            "lyrics": ["First line of text words..."]
-        };
-        tracksArray.push(blankTrack);
-        renderTrackListUi();
-        loadTrackPropertiesToForm(tracksArray.length - 1);
-        updateJsonExportPreview();
-    }
-
-    function deleteSelectedTrack() {
-        if (activeTrackIndex === null) return;
-        tracksArray.splice(activeTrackIndex, 1);
-        activeTrackIndex = null;
-        disablePropertiesPanel();
-        renderTrackListUi();
-        updateJsonExportPreview();
-    }
-
-    function moveTrackOrder(index, direction) {
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= tracksArray.length) return;
-
-        // Perform safe array item value position swaps
-        const temp = tracksArray[index];
-        tracksArray[index] = tracksArray[targetIndex];
-        tracksArray[targetIndex] = temp;
-
-        activeTrackIndex = targetIndex;
-        renderTrackListUi();
-        loadTrackPropertiesToForm(targetIndex);
-        updateJsonExportPreview();
-    }
-
-    // 7. Render serialization previews
-    function updateJsonExportPreview() {
-        const output = document.getElementById('jsonOutput');
-        output.innerText = JSON.stringify(tracksArray, null, 2);
-    }
-
-    function copyFormattedJSONToClipboard() {
-        const text = document.getElementById('jsonOutput').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert("JSON code array matrix copied directly to memory clipboard! Open your target file in GitHub, select everything, and paste this directly over it to overwrite the changes.");
-        }).catch(() => {
-            alert("Clipboard copy actions restricted by browser engine workflows.");
-        });
-    }
-
-    window.onload = initEditor;
-</script>
+<script type="module" src="/src/editor.ts"></script>
 </body>
 </html>

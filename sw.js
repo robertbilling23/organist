@@ -1,10 +1,9 @@
-const CACHE_NAME = 'lodge-music-v53';
+const CACHE_NAME = 'lodge-music-v56';
 
 const CORE_ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './sets.json'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -30,48 +29,71 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
-  const isAudioFile = url.pathname.endsWith('.mp3') || url.pathname.endsWith('.wav');
+  // Never intercept cross-origin calls (Firebase Firestore / Auth / Google APIs)
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
 
-  // Create a clean URL request pointer with parameters stripped for consistent local storage mapping
-  const cleanRequestTarget = isAudioFile ? new Request(url.origin + url.pathname) : event.request;
+  const lowerPath = url.pathname.toLowerCase();
+  const isAudioFile =
+    lowerPath.endsWith('.mp3') ||
+    lowerPath.endsWith('.wav') ||
+    lowerPath.endsWith('.ogg') ||
+    lowerPath.endsWith('.m4a') ||
+    lowerPath.endsWith('.aac') ||
+    lowerPath.endsWith('.flac');
 
-  event.respondWith(
-    caches.match(cleanRequestTarget).then((cachedResponse) => {
-      // 1. Always serve instantly if found in local hardware storage
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  if (isAudioFile) {
+    const cleanRequestTarget = new Request(url.origin + url.pathname);
+    event.respondWith(
+      caches.match(cleanRequestTarget).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-      // 2. If it's a cache miss, handle cellular connection restrictions
-      if (isAudioFile && navigator.connection) {
-        const connectionType = navigator.connection.type;
-        const saveDataActive = navigator.connection.saveData;
+        if (navigator.connection) {
+          const connectionType = navigator.connection.type;
+          const saveDataActive = navigator.connection.saveData;
 
-        if (connectionType === 'cellular' || saveDataActive === true) {
-          if (url.searchParams.get('forceMobile') !== 'true') {
-            return new Response(
-              JSON.stringify({ error: "Cellular download blocked. Turn on 'Allow Mobile Data' on the home screen." }),
-              { status: 403, headers: { 'Content-Type': 'application/json' } }
-            );
+          if (connectionType === 'cellular' || saveDataActive === true) {
+            if (url.searchParams.get('forceMobile') !== 'true') {
+              return new Response(
+                JSON.stringify({ error: "Cellular download blocked. Turn on 'Allow Mobile Data' on the home screen." }),
+                { status: 403, headers: { 'Content-Type': 'application/json' } }
+              );
+            }
           }
         }
-      }
 
-      // 3. Download asset, then clean the address string before writing to cache
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) {
+        return fetch(event.request).then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200) {
+            return networkResponse;
+          }
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(cleanRequestTarget, responseToCache);
+          });
           return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          // Save under the clean, parameterless URL so checkbox states won't cause split hits
-          cache.put(cleanRequestTarget, responseToCache);
         });
+      })
+    );
+    return;
+  }
 
+  // Network-first for HTML, JS, CSS, and JSON so updates are always fresh when online
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
         return networkResponse;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

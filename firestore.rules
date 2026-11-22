@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'robert.billing@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidTrackColor(color) {
+      return color in ['darkblue', 'blue', 'yellow', 'green', 'red', 'orange', 'purple'];
+    }
+
+    function isValidSet(data, setId) {
+      return data.keys().hasAll(['id', 'label', 'order', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'legacyId', 'label', 'sourceFile', 'order', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.id == setId
+        && isValidId(data.id)
+        && (!('legacyId' in data) || (data.legacyId is int && data.legacyId >= 0 && data.legacyId <= 1000000))
+        && data.label is string
+        && data.label.size() >= 1
+        && data.label.size() <= 80
+        && (!('sourceFile' in data) || (data.sourceFile is string && data.sourceFile.size() <= 120))
+        && data.order is int
+        && data.order >= 0
+        && data.order <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTrack(data, setId, trackId) {
+      return data.keys().hasAll(['id', 'setId', 'title', 'color', 'file', 'cue', 'lyrics', 'order', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'setId', 'title', 'color', 'file', 'cue', 'lyrics', 'order', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.id == trackId
+        && isValidId(data.id)
+        && data.setId is string
+        && data.setId == setId
+        && isValidId(data.setId)
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 100
+        && data.color is string
+        && isValidTrackColor(data.color)
+        && data.file is string
+        && data.file.size() >= 1
+        && data.file.size() <= 300
+        && data.cue is string
+        && data.cue.size() <= 500
+        && data.lyrics is list
+        && data.lyrics.size() <= 100
+        && (data.lyrics.size() == 0 || (data.lyrics[0] is string && data.lyrics[0].size() <= 1000))
+        && data.order is int
+        && data.order >= 0
+        && data.order <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdmin(data, adminId) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'role', 'createdAt'])
+        && data.uid is string
+        && data.uid == adminId
+        && isValidId(data.uid)
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 254
+        && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    // Connection health check endpoint (read-only single doc)
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // Admin allowlist (strictly restricted to verified admins)
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && ((isVerifiedUser() && request.auth.uid == adminId) || isAdmin());
+      allow list: if false;
+      allow create: if isAdmin()
+        && isValidId(adminId)
+        && isValidAdmin(incoming(), adminId)
+        && incoming().createdAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(adminId)
+        && isValidAdmin(incoming(), adminId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role']);
+      allow delete: if isValidId(adminId) && isAdmin();
+    }
+
+    // Ceremonial Sets (publicly readable, owner/admin writable)
+    match /sets/{setId} {
+      allow get: if isValidId(setId);
+      allow list: if true;
+      allow create: if isAdmin()
+        && isValidId(setId)
+        && isValidSet(incoming(), setId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(setId)
+        && isValidSet(incoming(), setId)
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['label', 'legacyId', 'sourceFile', 'order', 'updatedAt']);
+      allow delete: if isValidId(setId) && isAdmin();
+
+      // Track Buttons Subcollection (publicly readable, owner/admin writable)
+      match /tracks/{trackId} {
+        allow get: if isValidId(setId) && isValidId(trackId);
+        allow list: if isValidId(setId);
+        allow create: if isAdmin()
+          && isValidId(setId)
+          && isValidId(trackId)
+          && isValidTrack(incoming(), setId, trackId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/sets/$(setId));
+        allow update: if isAdmin()
+          && isValidId(setId)
+          && isValidId(trackId)
+          && isValidTrack(incoming(), setId, trackId)
+          && incoming().id == existing().id
+          && incoming().setId == existing().setId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'color', 'file', 'cue', 'lyrics', 'order', 'updatedAt'])
+          && existsAfter(/databases/$(database)/documents/sets/$(setId));
+        allow delete: if isValidId(setId) && isValidId(trackId) && isAdmin();
+      }
+    }
+  }
+}
