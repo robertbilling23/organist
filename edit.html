@@ -3,19 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0e14">
     <title>Lodge Music — Configuration Studio</title>
     <meta name="description" content="Owner-only configuration studio for Lodge Music sets, button colors, text, cues, and ordering.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Exo+2:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script>
         try {
-            if (localStorage.getItem('lodgeMusicTheme') === 'ivory') {
-                document.documentElement.setAttribute('data-theme', 'ivory');
+            if (localStorage.getItem('lodgeMusicTheme') !== 'default') {
+                document.documentElement.setAttribute('data-theme', 'metal');
             }
-        } catch (e) {}
+        } catch (e) {
+            document.documentElement.setAttribute('data-theme', 'metal');
+        }
     </script>
     <style>
         :root {
             --bg-dark: #0f141c;
+            --bg-image: none;
             --panel-bg: #161f2b;
+            --panel-bg-image: none;
             --panel-border: #2c3e55;
             --panel-border-hover: #4f6b8f;
             --surface-elevated: #233145;
@@ -37,53 +45,96 @@
             --toast-bg: #1e293b;
             --toast-text: #ffffff;
             --panel-shadow: none;
+            --btn-shadow: none;
+            --font-display: inherit;
+            --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             --btn-darkblue: #26354a;
+            --btn-darkblue-border: #384a66;
             --btn-blue: #4a6785;
+            --btn-blue-border: #5c7fa3;
             --btn-yellow: #7a5a13;
+            --btn-yellow-border: #a87d1c;
             --btn-green: #1b4f2e;
+            --btn-green-border: #277042;
             --btn-red: #661a1a;
+            --btn-red-border: #8f2626;
             --btn-orange: #7a3711;
+            --btn-orange-border: #a84b18;
             --btn-purple: #3f1b69;
+            --btn-purple-border: #592891;
         }
 
-        html[data-theme="ivory"] {
-            --bg-dark: #f6f2e9;
-            --panel-bg: #ffffff;
-            --panel-border: #cfc5b3;
-            --panel-border-hover: #9f927d;
-            --surface-elevated: #ece5d8;
-            --surface-input: #faf7f0;
-            --surface-subtle: #f3eee3;
-            --preview-grid-bg: #ebe4d6;
-            --badge-clean-bg: #ece5d8;
-            --order-btn-bg: #ebe4d6;
-            --text-bright: #142033;
-            --text-dim: #515e72;
-            --active-blue: #0c6e87;
-            --btn-primary-text: #ffffff;
-            --play-green: #167948;
-            --stop-red: #b82e24;
-            --cue-gold: #9a5506;
-            --footer-blue: #183157;
-            --active-ring: #142033;
-            --active-ring-shadow: 0 0 0 2px #f6f2e9, 0 0 0 4px #0c6e87;
-            --toast-bg: #183157;
-            --toast-text: #ffffff;
-            --panel-shadow: 0 1px 4px rgba(20, 32, 51, 0.06);
-            --btn-darkblue: #1e365c;
-            --btn-blue: #2b5c8a;
-            --btn-yellow: #99640b;
-            --btn-green: #1b6339;
-            --btn-red: #8e2424;
-            --btn-orange: #a1440e;
-            --btn-purple: #542382;
+        html[data-theme="metal"] {
+            --bg-dark: #0e1218;
+            --bg-image:
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(255, 255, 255, 0.018) 0px,
+                    rgba(255, 255, 255, 0.018) 1px,
+                    transparent 1px,
+                    transparent 3px
+                ),
+                radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.1) 0%, transparent 55%),
+                linear-gradient(165deg, #1d232f 0%, #0d1016 48%, #161b24 100%);
+            --panel-bg: #151a23;
+            --panel-bg-image:
+                repeating-linear-gradient(
+                    180deg,
+                    rgba(255, 255, 255, 0.014) 0px,
+                    rgba(255, 255, 255, 0.014) 1px,
+                    transparent 1px,
+                    transparent 4px
+                ),
+                linear-gradient(180deg, #1f2633 0%, #121720 100%);
+            --panel-border: #556782;
+            --panel-border-hover: #38bdf8;
+            --surface-elevated: #232c3c;
+            --surface-input: #10151e;
+            --surface-subtle: #0f131b;
+            --preview-grid-bg: #0a0d12;
+            --badge-clean-bg: #1e2634;
+            --order-btn-bg: #253042;
+            --text-bright: #f4f8ff;
+            --text-dim: #a9bacf;
+            --active-blue: #00e5ff;
+            --btn-primary-text: #04131a;
+            --play-green: #10e88a;
+            --stop-red: #ff4757;
+            --cue-gold: #ffbe2e;
+            --footer-blue: linear-gradient(180deg, #1d283a 0%, #101621 100%);
+            --active-ring: #ffffff;
+            --active-ring-shadow: 0 0 0 2px #0b0e14, 0 0 16px rgba(0, 229, 255, 0.75);
+            --toast-bg: #1b2434;
+            --toast-text: #f4f8ff;
+            --panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 8px 24px rgba(0, 0, 0, 0.55);
+            --btn-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 0 rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.45);
+            --font-display: 'Chakra Petch', 'Segoe UI', sans-serif;
+            --font-body: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+            --btn-darkblue: linear-gradient(180deg, #1d4ed8 0%, #172554 100%);
+            --btn-darkblue-border: #60a5fa;
+            --btn-blue: linear-gradient(180deg, #0277bd 0%, #0c4a6e 100%);
+            --btn-blue-border: #38bdf8;
+            --btn-yellow: linear-gradient(180deg, #b45309 0%, #78350f 100%);
+            --btn-yellow-border: #fcd34d;
+            --btn-green: linear-gradient(180deg, #047857 0%, #064e3b 100%);
+            --btn-green-border: #34d399;
+            --btn-red: linear-gradient(180deg, #dc2626 0%, #7f1d1d 100%);
+            --btn-red-border: #ff7b89;
+            --btn-orange: linear-gradient(180deg, #c2410c 0%, #7c2d12 100%);
+            --btn-orange-border: #fb923c;
+            --btn-purple: linear-gradient(180deg, #7e22ce 0%, #4c1d95 100%);
+            --btn-purple-border: #c084fc;
         }
 
         * { box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: var(--font-body);
             background-color: var(--bg-dark);
+            background-image: var(--bg-image);
+            background-attachment: fixed;
             color: var(--text-bright);
             margin: 0;
             padding: 18px;
@@ -98,7 +149,8 @@
         }
 
         .header-panel {
-            background: var(--panel-bg);
+            background-color: var(--panel-bg);
+            background-image: var(--panel-bg-image);
             border: 1px solid var(--panel-border);
             border-radius: 10px;
             padding: 16px 20px;
@@ -107,6 +159,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            box-shadow: var(--panel-shadow);
         }
 
         .header-left {
@@ -118,7 +171,9 @@
 
         h1 {
             margin: 0;
-            font-size: 1.35rem;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            letter-spacing: 0.4px;
             color: var(--active-blue);
         }
 
@@ -191,13 +246,15 @@
         }
 
         .workspace-panel {
-            background: var(--panel-bg);
+            background-color: var(--panel-bg);
+            background-image: var(--panel-bg-image);
             border: 1px solid var(--panel-border);
             border-radius: 10px;
             padding: 16px 18px;
             display: flex;
             flex-direction: column;
             gap: 14px;
+            box-shadow: var(--panel-shadow);
         }
 
         .empty-migration-banner {
@@ -240,8 +297,9 @@
         }
 
         .panel-title {
-            font-size: 1.1rem;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 1.12rem;
+            font-weight: 700;
             border-bottom: 1px dashed var(--panel-border);
             padding-bottom: 8px;
             display: flex;
@@ -306,7 +364,7 @@
             height: 36px;
             border-radius: 4px;
             flex-shrink: 0;
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1.5px solid rgba(255,255,255,0.35);
         }
         .track-meta {
             display: flex;
@@ -315,7 +373,8 @@
             min-width: 0;
         }
         .track-title-text {
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-weight: 700;
             font-size: 1rem;
             white-space: nowrap;
             overflow: hidden;
@@ -323,14 +382,14 @@
         }
         .order-num {
             color: var(--cue-gold);
-            font-family: monospace;
+            font-family: var(--font-mono);
             font-size: 0.85rem;
             margin-right: 4px;
         }
         .track-file-subtext {
             font-size: 0.78rem;
             color: var(--text-dim);
-            font-family: monospace;
+            font-family: var(--font-mono);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -373,6 +432,7 @@
             border-radius: 6px;
             height: 52px;
             padding: 4px 6px;
+            font-family: var(--font-display);
             font-size: 0.92rem;
             font-weight: 700;
             cursor: pointer;
@@ -382,18 +442,20 @@
             text-align: center;
             line-height: 1.1;
             word-break: break-word;
+            box-shadow: var(--btn-shadow);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
         }
         .preview-chip.selected {
-            border-color: var(--active-ring);
+            border-color: var(--active-ring) !important;
             box-shadow: var(--active-ring-shadow);
         }
-        .preview-chip.color-darkblue { background-color: var(--btn-darkblue); }
-        .preview-chip.color-blue     { background-color: var(--btn-blue); }
-        .preview-chip.color-yellow   { background-color: var(--btn-yellow); }
-        .preview-chip.color-green    { background-color: var(--btn-green); }
-        .preview-chip.color-red      { background-color: var(--btn-red); }
-        .preview-chip.color-orange   { background-color: var(--btn-orange); }
-        .preview-chip.color-purple   { background-color: var(--btn-purple); }
+        .color-darkblue { background: var(--btn-darkblue); border-color: var(--btn-darkblue-border); }
+        .color-blue     { background: var(--btn-blue);     border-color: var(--btn-blue-border); }
+        .color-yellow   { background: var(--btn-yellow);   border-color: var(--btn-yellow-border); }
+        .color-green    { background: var(--btn-green);    border-color: var(--btn-green-border); }
+        .color-red      { background: var(--btn-red);      border-color: var(--btn-red-border); }
+        .color-orange   { background: var(--btn-orange);   border-color: var(--btn-orange-border); }
+        .color-purple   { background: var(--btn-purple);   border-color: var(--btn-purple-border); }
 
         .form-group {
             display: flex;
@@ -431,14 +493,17 @@
             gap: 8px;
         }
         .color-swatch-btn {
-            border: 2px solid transparent;
+            border: 2px solid var(--panel-border);
             border-radius: 6px;
             padding: 10px 6px;
             color: #ffffff;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-weight: 700;
             font-size: 0.82rem;
             cursor: pointer;
             text-align: center;
+            box-shadow: var(--btn-shadow);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
             transition: transform 0.1s, box-shadow 0.15s;
         }
         .color-swatch-btn.active {
@@ -454,18 +519,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-weight: 700;
             font-size: 1.15rem;
             color: #ffffff;
             padding: 0 12px;
             text-align: center;
+            box-shadow: var(--btn-shadow);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
         }
 
         .btn-utility {
             padding: 10px 14px;
-            border: 1px solid transparent;
+            border: 1.5px solid var(--panel-border);
             border-radius: 6px;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
             color: #ffffff;
@@ -475,6 +544,7 @@
             justify-content: center;
             gap: 6px;
             white-space: nowrap;
+            box-shadow: var(--btn-shadow);
         }
         .btn-utility:disabled {
             opacity: 0.45;
@@ -486,6 +556,7 @@
         }
         .btn-primary {
             background: var(--active-blue);
+            border-color: #a5f3fc;
             color: var(--btn-primary-text);
         }
         .btn-secondary {
@@ -494,15 +565,15 @@
             color: var(--text-bright);
         }
         .btn-add {
-            background: #1b6b3a;
+            background: var(--btn-green);
             border-color: var(--play-green);
         }
         .btn-delete {
-            background: #732020;
+            background: var(--btn-red);
             border-color: var(--stop-red);
         }
         .btn-gold {
-            background: #8a5b0c;
+            background: var(--btn-yellow);
             border-color: var(--cue-gold);
         }
 
@@ -541,12 +612,14 @@
             justify-content: space-between;
             gap: 10px;
             padding: 8px 14px;
-            background: var(--panel-bg);
+            background-color: var(--panel-bg);
+            background-image: var(--panel-bg-image);
             border: 1px solid var(--panel-border);
             border-radius: 10px;
             box-shadow: var(--panel-shadow);
         }
         .theme-switcher-label {
+            font-family: var(--font-display);
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--text-dim);
@@ -572,6 +645,7 @@
             border-radius: 5px;
             background: transparent;
             color: var(--text-dim);
+            font-family: var(--font-display);
             font-size: 0.84rem;
             font-weight: 700;
             cursor: pointer;
@@ -590,15 +664,14 @@
             width: 11px;
             height: 11px;
             border-radius: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.55);
             flex-shrink: 0;
+        }
+        .theme-swatch-metal {
+            background: linear-gradient(135deg, #273142 45%, #00e5ff 55%);
         }
         .theme-swatch-default {
             background: linear-gradient(135deg, #0f141c 50%, #00bcd4 50%);
-        }
-        .theme-swatch-ivory {
-            background: linear-gradient(135deg, #f6f2e9 50%, #9a5506 50%);
-            border-color: rgba(20, 32, 51, 0.35);
         }
 
         .editor-toast {
@@ -755,7 +828,7 @@
                     </div>
                 </div>
 
-                <div class="button-live-sample" id="buttonLiveSample" style="background-color: var(--btn-blue);">Select a button</div>
+                <div class="button-live-sample color-blue" id="buttonLiveSample">Select a button</div>
 
                 <div class="form-group">
                     <label for="editTitle">Button Text</label>
@@ -799,13 +872,13 @@
     <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
         <span class="theme-switcher-label">Theme</span>
         <div class="theme-segmented">
-            <button type="button" class="btn-theme-opt active" data-theme-value="default" aria-pressed="true">
+            <button type="button" class="btn-theme-opt active" data-theme-value="metal" aria-pressed="true">
+                <span class="theme-swatch theme-swatch-metal" aria-hidden="true"></span>
+                Dark Metal
+            </button>
+            <button type="button" class="btn-theme-opt" data-theme-value="default" aria-pressed="false">
                 <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
                 Night Console
-            </button>
-            <button type="button" class="btn-theme-opt" data-theme-value="ivory" aria-pressed="false">
-                <span class="theme-swatch theme-swatch-ivory" aria-hidden="true"></span>
-                Ivory &amp; Brass
             </button>
         </div>
     </div>

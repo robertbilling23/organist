@@ -1,16 +1,16 @@
-export type VisualTheme = 'default' | 'ivory';
+export type VisualTheme = 'metal' | 'default';
 
 export const THEME_STORAGE_KEY = 'lodgeMusicTheme';
 
 export function normalizeTheme(value: string | null | undefined): VisualTheme {
-  return value === 'ivory' ? 'ivory' : 'default';
+  return value === 'default' ? 'default' : 'metal';
 }
 
 export function getStoredTheme(): VisualTheme {
   try {
     return normalizeTheme(localStorage.getItem(THEME_STORAGE_KEY));
   } catch {
-    return 'default';
+    return 'metal';
   }
 }
 
@@ -25,8 +25,8 @@ export function syncThemeSwitcherButtons(theme: VisualTheme): void {
 
 export function applyVisualTheme(theme: VisualTheme, persist = true): void {
   const resolved = normalizeTheme(theme);
-  if (resolved === 'ivory') {
-    document.documentElement.setAttribute('data-theme', 'ivory');
+  if (resolved === 'metal') {
+    document.documentElement.setAttribute('data-theme', 'metal');
   } else {
     document.documentElement.removeAttribute('data-theme');
   }

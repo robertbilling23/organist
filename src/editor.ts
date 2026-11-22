@@ -443,12 +443,10 @@ function renderTrackList(): void {
     row.draggable = true;
     row.dataset.index = String(idx);
 
-    const colorHex = TRACK_COLOR_META[track.color]?.hex || '#4a6785';
-
     row.innerHTML = `
       <div class="track-row-left">
         <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-        <span class="color-swatch-dot" style="background:${colorHex};"></span>
+        <span class="color-swatch-dot color-${track.color}"></span>
         <div class="track-meta">
           <span class="track-title-text"><span class="order-num">#${idx + 1}</span> ${escapeHtml(track.title)}</span>
           <span class="track-file-subtext">${escapeHtml(track.file)}</span>
@@ -582,10 +580,8 @@ function renderColorSwatches(): void {
     const meta = TRACK_COLOR_META[color];
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'color-swatch-btn';
+    btn.className = `color-swatch-btn color-${color}`;
     btn.dataset.color = color;
-    btn.style.backgroundColor = meta.hex;
-    btn.style.borderColor = meta.border;
     btn.innerHTML = `<span>${meta.label}</span>`;
     btn.onclick = () => {
       setActiveColorSwatch(color);
@@ -611,9 +607,7 @@ function setActiveColorSwatch(color: TrackColor): void {
 function updateButtonPreviewPill(title: string, color: TrackColor): void {
   const pill = byId<HTMLDivElement>('buttonLiveSample');
   if (!pill) return;
-  const meta = TRACK_COLOR_META[color] || TRACK_COLOR_META.blue;
-  pill.style.backgroundColor = meta.hex;
-  pill.style.borderColor = meta.border;
+  pill.className = `button-live-sample color-${color}`;
   pill.textContent = title.trim() || '(Untitled Button)';
 }
 

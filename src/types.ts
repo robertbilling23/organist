@@ -11,13 +11,13 @@ export const TRACK_COLORS = [
 export type TrackColor = (typeof TRACK_COLORS)[number];
 
 export const TRACK_COLOR_META: Record<TrackColor, { label: string; hex: string; border: string }> = {
-  darkblue: { label: 'Dark Blue', hex: '#26354a', border: '#384a66' },
-  blue: { label: 'Blue', hex: '#4a6785', border: '#5c7fa3' },
-  yellow: { label: 'Gold / Yellow', hex: '#7a5a13', border: '#a87d1c' },
-  green: { label: 'Green', hex: '#1b4f2e', border: '#277042' },
-  red: { label: 'Red', hex: '#661a1a', border: '#8f2626' },
-  orange: { label: 'Orange', hex: '#7a3711', border: '#a84b18' },
-  purple: { label: 'Purple', hex: '#3f1b69', border: '#592891' }
+  darkblue: { label: 'Dark Blue', hex: '#1d4ed8', border: '#60a5fa' },
+  blue: { label: 'Blue', hex: '#0284c7', border: '#38bdf8' },
+  yellow: { label: 'Gold / Yellow', hex: '#b45309', border: '#fcd34d' },
+  green: { label: 'Green', hex: '#047857', border: '#34d399' },
+  red: { label: 'Red', hex: '#dc2626', border: '#ff7b89' },
+  orange: { label: 'Orange', hex: '#c2410c', border: '#fb923c' },
+  purple: { label: 'Purple', hex: '#7e22ce', border: '#c084fc' }
 };
 
 export const BLUEPRINT_LIMITS = {
