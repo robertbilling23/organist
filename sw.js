@@ -1,9 +1,10 @@
-const CACHE_NAME = 'lodge-music-v56';
+const CACHE_NAME = 'lodge-music-v58';
 
 const CORE_ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './assets/console.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -34,7 +35,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   // Never intercept cross-origin calls (Firebase Firestore / Auth / Google APIs)
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
+  if (url.pathname.includes('/api/')) return;
 
   const lowerPath = url.pathname.toLowerCase();
   const isAudioFile =

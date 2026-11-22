@@ -3,7 +3,7 @@ import firebaseRulesPlugin from '@firebase/eslint-plugin-security-rules';
 
 export default [
   {
-    ignores: ['dist/**/*', 'node_modules/**/*', 'audio/**/*', '*.json', '**/*.ts']
+    ignores: ['assets/**/*', 'dist/**/*', 'node_modules/**/*', 'audio/**/*', '*.json', '**/*.ts']
   },
   {
     files: ['**/*.js'],

@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const AUDIO_ROOT = path.resolve(__dirname, 'audio');
-const DIST_ROOT = path.resolve(__dirname, 'dist');
 const ALLOWED_AUDIO_EXTS = new Set(['.wav', '.mp3', '.ogg', '.m4a', '.aac', '.flac']);
 
 const app = express();
@@ -93,16 +92,19 @@ app.post('/api/upload-audio', express.raw({ type: '*/*', limit: '60mb' }), async
   }
 });
 
-app.use(express.static(DIST_ROOT, {
-  extensions: ['html']
-}));
+app.use((req, res, next) => {
+  if (req.path === '/sw.js' || req.path === '/' || req.path.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+  next();
+});
 
 app.use(express.static(__dirname, {
   extensions: ['html']
 }));
 
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(DIST_ROOT, 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, HOST, () => {

@@ -241,7 +241,7 @@ async function decodeAudioAsset(arrayBuffer: ArrayBuffer, filePath: string): Pro
 async function updateOfflineDiskMetricDisplay(): Promise<void> {
   if (!('caches' in window)) return;
   try {
-    const storageVault = await caches.open('lodge-music-v56');
+    const storageVault = await caches.open('lodge-music-v58');
     const storedRequests = await storageVault.keys();
     let totalEstimatedMB = 0.08;
 
@@ -851,7 +851,7 @@ async function handleMissingAudioFileUpload(inputEl: HTMLInputElement): Promise<
 
     if ('caches' in window) {
       try {
-        const storageVault = await caches.open('lodge-music-v56');
+        const storageVault = await caches.open('lodge-music-v58');
         const cleanUrl = new URL(track.file, window.location.href).href;
         await storageVault.put(
           new Request(cleanUrl),
@@ -867,13 +867,13 @@ async function handleMissingAudioFileUpload(inputEl: HTMLInputElement): Promise<
     }
 
     try {
-      await fetch(`/api/upload-audio?path=${encodeURIComponent(track.file)}`, {
+      await fetch(`./api/upload-audio?path=${encodeURIComponent(track.file)}`, {
         method: 'POST',
         headers: { 'Content-Type': getAudioMimeType(track.file) },
         body: arrayBuffer
       });
     } catch {
-      // ignore if offline
+      // ignore if offline or static hosting
     }
 
     tracks.forEach((t, idx) => {
@@ -1082,8 +1082,16 @@ function navigateToHomeScreen(): void {
   window.dispatchEvent(new Event('resize'));
 }
 
+function getPublicShareBaseUrl(): string {
+  const host = window.location.hostname.startsWith('ais-dev-')
+    ? window.location.hostname.replace(/^ais-dev-/, 'ais-pre-')
+    : window.location.hostname;
+  const port = window.location.port ? `:${window.location.port}` : '';
+  return `${window.location.protocol}//${host}${port}${window.location.pathname}`;
+}
+
 async function shareLodgeMusicApp(): Promise<void> {
-  const baseUrl = window.location.origin + window.location.pathname;
+  const baseUrl = getPublicShareBaseUrl();
   const shareUrl = activeSet ? `${baseUrl}?set=${encodeURIComponent(activeSet.id)}` : baseUrl;
   const shareTitle = activeSet ? `Lodge Music — ${activeSet.label}` : 'Lodge Music';
   const shareText = 'Here is the Lodge Music app for running ceremonial audio straight from your phone or tablet.';
@@ -1141,7 +1149,7 @@ function updateConsoleAdminEditButton(): void {
   if (isAdmin && activeSet) {
     btn.style.display = 'inline-flex';
     btn.onclick = () => {
-      window.location.href = `/edit.html?set=${encodeURIComponent(activeSet!.id)}`;
+      window.location.href = `./edit.html?set=${encodeURIComponent(activeSet!.id)}`;
     };
   } else {
     btn.style.display = 'none';
@@ -1165,7 +1173,7 @@ function renderAuthControls(): void {
         <span class="owner-email">${currentUser.email || ''}</span>
       </div>
       <div class="owner-bar-actions">
-        <a href="/edit.html" class="btn-owner-edit">✏️ Edit Buttons &amp; Order</a>
+        <a href="./edit.html" class="btn-owner-edit">✏️ Edit Buttons &amp; Order</a>
         <button type="button" class="btn-owner-signout" id="btnOwnerSignOut">Sign Out</button>
       </div>
     `;
@@ -1243,9 +1251,19 @@ function initConsole(): void {
     try {
       await signInWithGoogle();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Sign-in cancelled.', 'error');
+      const msg = err instanceof Error ? err.message : 'Sign-in cancelled.';
+      if (msg.includes('auth/unauthorized-domain')) {
+        showToast(`Add "${window.location.hostname}" to Firebase Auth Authorized Domains to sign in from here.`, 'error');
+      } else {
+        showToast(msg, 'error');
+      }
     }
   });
+
+  const switcherRow = byId<HTMLDivElement>('setSwitcherRow');
+  if (switcherRow) {
+    switcherRow.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: var(--text-dim);">Loading sets...</div>';
+  }
 
   subscribeAuth(async (user) => {
     currentUser = user;
@@ -1290,6 +1308,10 @@ function initConsole(): void {
     },
     (err) => {
       console.error('Failed to load ceremonial sets from cloud:', err);
+      const row = byId<HTMLDivElement>('setSwitcherRow');
+      if (row) {
+        row.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: #ffb4a9;">Unable to reach cloud configuration. Check your connection and reload.</div>';
+      }
       showToast('Failed to load configuration from cloud.', 'error');
     }
   );

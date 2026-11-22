@@ -474,7 +474,7 @@ export async function migrateLegacyConfiguration(options: {
   includeFiller?: boolean;
   includeMark?: boolean;
 }): Promise<MigrationResult> {
-  const setsResponse = await fetch('/sets.json?v=' + Date.now());
+  const setsResponse = await fetch('./sets.json?v=' + Date.now());
   if (!setsResponse.ok) {
     throw new Error('Could not load sets.json from server.');
   }
@@ -538,7 +538,7 @@ export async function migrateLegacyConfiguration(options: {
 
     let rawTracks: LegacyTrackEntry[] = [];
     try {
-      const trackRes = await fetch('/' + entry.sourceFile + '?v=' + Date.now());
+      const trackRes = await fetch('./' + entry.sourceFile + '?v=' + Date.now());
       if (trackRes.ok) {
         const parsed = await trackRes.json();
         if (Array.isArray(parsed)) {

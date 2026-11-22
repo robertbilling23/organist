@@ -80,34 +80,63 @@ function stopAudioPreview(): void {
 }
 
 async function fetchAudioFilesCatalog(): Promise<void> {
+  const discovered = new Set<string>();
   try {
-    const res = await fetch('/api/audio-files');
-    if (!res.ok) return;
-    const data = (await res.json()) as { files?: string[] };
-    if (Array.isArray(data.files)) {
-      availableAudioFiles = data.files;
-      const datalist = byId<HTMLDataListElement>('audioFilesDatalist');
-      if (datalist) {
-        datalist.innerHTML = '';
-        availableAudioFiles.forEach((f) => {
-          const opt = document.createElement('option');
-          opt.value = f;
-          datalist.appendChild(opt);
-        });
-      }
-      const quickSelect = byId<HTMLSelectElement>('audioFilePickerSelect');
-      if (quickSelect) {
-        quickSelect.innerHTML = '<option value="">-- Pick an existing file in /audio --</option>';
-        availableAudioFiles.forEach((f) => {
-          const opt = document.createElement('option');
-          opt.value = f;
-          opt.textContent = f.replace(/^audio\//, '');
-          quickSelect.appendChild(opt);
-        });
+    const res = await fetch('./api/audio-files');
+    if (res.ok) {
+      const data = (await res.json()) as { files?: string[] };
+      if (Array.isArray(data.files)) {
+        data.files.forEach((f) => discovered.add(f));
       }
     }
   } catch {
-    // ignore
+    // static hosting fallback below
+  }
+
+  if (discovered.size === 0) {
+    const jsonFiles = ['craft.json', 'ea.json', 'fc.json', 'mm.json', 'installation.json', 'filler.json', 'mark.json'];
+    await Promise.all(
+      jsonFiles.map(async (jf) => {
+        try {
+          const r = await fetch('./' + jf);
+          if (!r.ok) return;
+          const arr = (await r.json()) as Array<{ file?: string }>;
+          if (Array.isArray(arr)) {
+            arr.forEach((item) => {
+              if (item && typeof item.file === 'string' && item.file.trim()) {
+                discovered.add(item.file.trim());
+              }
+            });
+          }
+        } catch {
+          // ignore
+        }
+      })
+    );
+    tracksList.forEach((t) => {
+      if (t.file) discovered.add(t.file);
+    });
+  }
+
+  availableAudioFiles = Array.from(discovered).sort((a, b) => a.localeCompare(b));
+  const datalist = byId<HTMLDataListElement>('audioFilesDatalist');
+  if (datalist) {
+    datalist.innerHTML = '';
+    availableAudioFiles.forEach((f) => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      datalist.appendChild(opt);
+    });
+  }
+  const quickSelect = byId<HTMLSelectElement>('audioFilePickerSelect');
+  if (quickSelect) {
+    quickSelect.innerHTML = '<option value="">-- Pick an existing file in /audio --</option>';
+    availableAudioFiles.forEach((f) => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      opt.textContent = f.replace(/^audio\//, '');
+      quickSelect.appendChild(opt);
+    });
   }
 }
 
@@ -154,7 +183,7 @@ function renderAuthGate(): void {
         <p>Anyone can use the public Lodge Music player without an account. Sign in with the owner Google account (<strong>${OWNER_EMAIL}</strong>) to edit buttons, colors, order, or migrate your configuration.</p>
         <div class="auth-actions">
           <button type="button" class="btn-utility btn-primary" id="btnGoogleSignIn">Sign in with Google</button>
-          <a href="/" class="btn-utility btn-secondary">◀ Back to Public Player</a>
+          <a href="./" class="btn-utility btn-secondary">◀ Back to Public Player</a>
         </div>
       </div>
     `;
@@ -163,7 +192,12 @@ function renderAuthGate(): void {
       try {
         await signInWithGoogle();
       } catch (err) {
-        showToast(err instanceof Error ? err.message : 'Sign-in cancelled.', 'error');
+        const msg = err instanceof Error ? err.message : 'Sign-in cancelled.';
+        if (msg.includes('auth/unauthorized-domain')) {
+          showToast(`Add "${window.location.hostname}" to Firebase Auth Authorized Domains to sign in from here.`, 'error');
+        } else {
+          showToast(msg, 'error');
+        }
       }
     });
     return;
@@ -177,7 +211,7 @@ function renderAuthGate(): void {
         <h2>Read-Only Account</h2>
         <p>You are signed in as <strong>${currentUser.email || 'Unknown'}</strong>. Editing is restricted exclusively to the app owner (<strong>${OWNER_EMAIL}</strong>).</p>
         <div class="auth-actions">
-          <a href="/" class="btn-utility btn-primary">◀ Open Public Player</a>
+          <a href="./" class="btn-utility btn-primary">◀ Open Public Player</a>
           <button type="button" class="btn-utility btn-secondary" id="btnGateSignOut">Sign Out</button>
         </div>
       </div>
@@ -742,12 +776,15 @@ async function handleUploadNewAudioForButton(inputEl: HTMLInputElement): Promise
 
   try {
     const buffer = await file.arrayBuffer();
-    const res = await fetch(`/api/upload-audio?path=${encodeURIComponent(targetPath)}`, {
+    const res = await fetch(`./api/upload-audio?path=${encodeURIComponent(targetPath)}`, {
       method: 'POST',
       headers: { 'Content-Type': file.type || 'audio/mpeg' },
       body: buffer
     });
     if (!res.ok) {
+      if (res.status === 404 || res.status === 405) {
+        throw new Error('Direct upload requires the Node server. Add the audio file to your GitHub /audio folder and enter its path above.');
+      }
       const errJson = (await res.json().catch(() => ({}))) as { error?: string };
       throw new Error(errJson.error || `Upload failed (${res.status})`);
     }
