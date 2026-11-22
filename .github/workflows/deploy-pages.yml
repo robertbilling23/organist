@@ -19,15 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build application bundles
         run: npm run build
@@ -37,10 +37,11 @@ jobs:
           mkdir -p _site
           cp index.html edit.html manifest.json sw.js *.json _site/
           cp -r assets audio _site/
+          touch _site/.nojekyll
           rm -f _site/firebase-applet-config.json _site/firebase-blueprint.json _site/package.json _site/package-lock.json _site/tsconfig.json
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: "_site"
 
@@ -53,4 +54,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

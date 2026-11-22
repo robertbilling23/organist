@@ -5,7 +5,7 @@ const CORE_ASSETS = [
   './index.html',
   './manifest.json',
   './assets/console.js',
-  './assets/store.js'
+  './assets/theme.js'
 ];
 
 self.addEventListener('install', (event) => {
