@@ -10,6 +10,13 @@
 
     <link rel="manifest" href="./manifest.json">
     <script>
+        try {
+            if (localStorage.getItem('lodgeMusicTheme') === 'ivory') {
+                document.documentElement.setAttribute('data-theme', 'ivory');
+            }
+        } catch (e) {}
+    </script>
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
@@ -31,9 +38,16 @@
 
     <style>
         :root {
+            --outer-bg: #05070a;
             --bg-dark: #0f141c;
             --panel-bg: #161f2b;
             --panel-border: #384a66;
+            --surface-elevated: #1e293b;
+            --surface-subtle: #131c29;
+            --admin-bar-bg: #132238;
+            --edit-btn-bg: #132c3d;
+            --ticker-bg: rgba(0, 0, 0, 0.2);
+            --cue-bg: rgba(243, 156, 18, 0.12);
             --text-bright: #ffffff;
             --text-dim: #9ab0c7;
             --cue-gold: #f39c12;
@@ -42,6 +56,24 @@
             --active-blue: #00bcd4;
             --disabled: #1b2636;
             --footer-blue: #0f2c59;
+            --footer-text: #ffffff;
+            --footer-subtext: #9ab0c7;
+            --footer-control-bg: rgba(0, 0, 0, 0.25);
+            --banner-border: rgba(255, 255, 255, 0.1);
+            --set-btn-bg: #233145;
+            --set-btn-text: #ffffff;
+            --chip-text: #e2e8f0;
+            --btn-primary-text: #06131a;
+            --active-chip-border: #ffffff;
+            --active-chip-shadow: 0 0 20px 6px rgba(255, 255, 255, 0.85);
+            --modal-overlay-bg: rgba(5, 7, 10, 0.85);
+            --modal-bg: #131a24;
+            --toast-bg: #1e293b;
+            --toast-text: #ffffff;
+            --error-text: #ffb4a9;
+            --error-bg: rgba(231, 76, 60, 0.16);
+            --panel-shadow: none;
+            --font-display: inherit;
 
             /* Rich & Masonic Ceremonial Tones */
             --btn-darkblue: #26354a;
@@ -53,9 +85,57 @@
             --btn-purple: #3f1b69;
         }
 
+        html[data-theme="ivory"] {
+            --outer-bg: #e4ddd0;
+            --bg-dark: #f6f2e9;
+            --panel-bg: #ffffff;
+            --panel-border: #cfc5b3;
+            --surface-elevated: #ece5d8;
+            --surface-subtle: #faf7f0;
+            --admin-bar-bg: #e7f1f4;
+            --edit-btn-bg: #e2f1f5;
+            --ticker-bg: #ebe4d6;
+            --cue-bg: #fdf5e4;
+            --text-bright: #142033;
+            --text-dim: #515e72;
+            --cue-gold: #9a5506;
+            --play-green: #167948;
+            --stop-red: #b82e24;
+            --active-blue: #0c6e87;
+            --disabled: #dfd7c8;
+            --footer-blue: #183157;
+            --footer-text: #ffffff;
+            --footer-subtext: #cdd9ea;
+            --footer-control-bg: rgba(255, 255, 255, 0.12);
+            --banner-border: rgba(24, 49, 87, 0.25);
+            --set-btn-bg: #1c365e;
+            --set-btn-text: #ffffff;
+            --chip-text: #ffffff;
+            --btn-primary-text: #ffffff;
+            --active-chip-border: #142033;
+            --active-chip-shadow: 0 0 0 3px #f6f2e9, 0 0 0 6px #0c6e87, 0 8px 18px rgba(20, 32, 51, 0.25);
+            --modal-overlay-bg: rgba(20, 32, 51, 0.62);
+            --modal-bg: #ffffff;
+            --toast-bg: #183157;
+            --toast-text: #ffffff;
+            --error-text: #9e1c15;
+            --error-bg: rgba(184, 46, 36, 0.10);
+            --panel-shadow: 0 1px 4px rgba(20, 32, 51, 0.06);
+            --font-display: Georgia, "Palatino Linotype", "Book Antiqua", serif;
+
+            /* Organ-Stop Ceremonial Jewel Tones for Ivory Theme */
+            --btn-darkblue: #1e365c;
+            --btn-blue: #2b5c8a;
+            --btn-yellow: #99640b;
+            --btn-green: #1b6339;
+            --btn-red: #8e2424;
+            --btn-orange: #a1440e;
+            --btn-purple: #542382;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #05070a;
+            background-color: var(--outer-bg);
             color: var(--text-bright);
             margin: 0;
             padding: 0;
@@ -64,6 +144,13 @@
             user-select: none;
             touch-action: manipulation;
             overflow: hidden;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--active-blue);
+            outline-offset: 2px;
         }
 
         .console-grid {
@@ -76,6 +163,7 @@
             box-sizing: border-box;
             padding: 10px;
             overflow: hidden;
+            transition: background-color 0.2s ease;
         }
 
         .app-screen {
@@ -95,12 +183,13 @@
         }
 
         #screenHome {
-            padding-bottom: 270px;
+            padding-bottom: 0;
         }
 
         .home-scrolling-content-zone {
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
             overflow-y: auto;
             box-sizing: border-box;
             display: flex;
@@ -109,33 +198,35 @@
         }
 
         .home-anchored-bottom-tray {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
+            position: relative;
             background: var(--bg-dark);
             display: flex;
             flex-direction: column;
             gap: 8px;
             box-sizing: border-box;
             z-index: 900;
-            padding-top: 4px;
+            padding-top: 2px;
+            flex-shrink: 0;
         }
 
         .home-header-banner {
             background-color: var(--footer-blue);
-            color: var(--text-bright);
+            color: var(--footer-text);
             padding: 14px 15px;
+            font-family: var(--font-display);
             font-size: 1.45rem;
             font-weight: 900;
             letter-spacing: 0.5px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--banner-border);
             text-align: center;
             box-sizing: border-box;
             flex-shrink: 0;
+            box-shadow: var(--panel-shadow);
         }
 
         .owner-admin-bar {
-            background: #132238;
+            background: var(--admin-bar-bg);
             border: 1px solid var(--active-blue);
             border-radius: 8px;
             padding: 8px 12px;
@@ -155,7 +246,7 @@
         }
         .owner-badge {
             background: var(--play-green);
-            color: #062111;
+            color: #ffffff;
             font-weight: 900;
             font-size: 0.72rem;
             padding: 2px 7px;
@@ -183,7 +274,7 @@
         }
         .btn-owner-edit {
             background: var(--active-blue);
-            color: #06131a;
+            color: var(--btn-primary-text);
             text-decoration: none;
             font-weight: 900;
             font-size: 0.85rem;
@@ -191,7 +282,7 @@
             border-radius: 6px;
         }
         .btn-owner-signout {
-            background: #1e293b;
+            background: var(--surface-elevated);
             border: 1px solid var(--panel-border);
             color: var(--text-dim);
             font-weight: 700;
@@ -212,12 +303,13 @@
             box-sizing: border-box;
             gap: 10px;
             flex-shrink: 0;
+            box-shadow: var(--panel-shadow);
         }
 
         .btn-header-back {
-            background: #1e293b;
+            background: var(--surface-elevated);
             border: 1px solid var(--panel-border);
-            color: var(--text-dim);
+            color: var(--text-bright);
             font-weight: 900;
             padding: 6px 12px;
             border-radius: 6px;
@@ -227,7 +319,7 @@
         }
 
         .btn-header-edit {
-            background: #132c3d;
+            background: var(--edit-btn-bg);
             border: 1px solid var(--active-blue);
             color: var(--active-blue);
             font-weight: 800;
@@ -242,6 +334,7 @@
         }
 
         .header-title-text {
+            font-family: var(--font-display);
             font-size: 1.35rem;
             font-weight: 900;
             color: var(--active-blue);
@@ -257,21 +350,22 @@
             border-radius: 8px;
             padding: 10px;
             flex: 0 1 auto;
-            max-height: 54vh;
+            max-height: 48vh;
             overflow-y: auto;
             box-sizing: border-box;
+            box-shadow: var(--panel-shadow);
         }
 
         .playlist-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .nav-chip {
             border: 2px solid var(--panel-border);
-            color: #e2e8f0;
+            color: var(--chip-text);
             box-sizing: border-box;
             border-radius: 8px;
             font-size: 1.25rem;
@@ -289,11 +383,11 @@
             padding: 4px 6px;
         }
 
-        .nav-chip.color-darkblue { background-color: var(--btn-darkblue); border-color: var(--panel-border); }
-        .nav-chip.color-blue     { background-color: var(--btn-blue);     border-color: var(--panel-border); }
-        .nav-chip.color-yellow   { background-color: var(--btn-yellow);   border-color: var(--panel-border); }
+        .nav-chip.color-darkblue { background-color: var(--btn-darkblue); border-color: var(--btn-darkblue); }
+        .nav-chip.color-blue     { background-color: var(--btn-blue);     border-color: var(--btn-blue); }
+        .nav-chip.color-yellow   { background-color: var(--btn-yellow);   border-color: var(--btn-yellow); }
         .nav-chip.color-green    { background-color: var(--btn-green);    border-color: var(--btn-green); }
-        .nav-chip.color-red      { background-color: var(--btn-red);      border-color: var(--panel-border); }
+        .nav-chip.color-red      { background-color: var(--btn-red);      border-color: var(--btn-red); }
         .nav-chip.color-orange   { background-color: var(--btn-orange);   border-color: var(--btn-orange); }
         .nav-chip.color-purple   { background-color: var(--btn-purple);   border-color: var(--btn-purple); }
 
@@ -326,8 +420,8 @@
         .track-error-notice {
             display: none;
             font-size: 0.82rem;
-            color: #ffb4a9;
-            background: rgba(231, 76, 60, 0.16);
+            color: var(--error-text);
+            background: var(--error-bg);
             border: 1px solid var(--stop-red);
             border-radius: 6px;
             padding: 6px 8px;
@@ -338,9 +432,9 @@
         .nav-chip.active {
             color: #ffffff !important;
             font-weight: 900 !important;
-            border-color: #ffffff !important;
-            box-shadow: 0 0 20px 6px rgba(255, 255, 255, 0.85);
-            filter: brightness(1.2);
+            border-color: var(--active-chip-border) !important;
+            box-shadow: var(--active-chip-shadow);
+            filter: brightness(1.12);
             transform: scale(0.97);
         }
 
@@ -362,7 +456,7 @@
         }
 
         .track-ticker-line {
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--ticker-bg);
             border-left: 3px solid var(--active-blue);
             padding: 6px 10px;
             font-size: 0.95rem;
@@ -373,13 +467,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
         }
         .ticker-highlight {
             color: var(--active-blue);
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .cue-banner {
-            background: rgba(243, 156, 18, 0.12);
+            background: var(--cue-bg);
             border: 2px solid var(--cue-gold);
             border-radius: 8px;
             padding: 12px;
@@ -388,19 +487,23 @@
             flex-direction: column;
             box-sizing: border-box;
             flex-shrink: 0;
+            box-shadow: var(--panel-shadow);
         }
         .cue-label {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             color: var(--cue-gold);
             font-weight: 900;
             margin-bottom: 2px;
             display: block;
+            letter-spacing: 0.4px;
         }
         .cue-text {
+            font-family: var(--font-display);
             font-size: 1.15rem;
             font-weight: bold;
             line-height: 1.3;
+            color: var(--text-bright);
         }
 
         .lyrics-section-wrapper {
@@ -410,7 +513,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            min-height: 80px;
+            min-height: 72px;
         }
 
         .lyrics-panel {
@@ -421,6 +524,7 @@
             flex: 1;
             overflow-y: auto;
             box-sizing: border-box;
+            box-shadow: var(--panel-shadow);
         }
         .lyrics-content-container {
             display: flex;
@@ -428,8 +532,9 @@
             gap: 12px;
         }
         .lyric-line {
+            font-family: var(--font-display);
             font-size: 1.05rem;
-            line-height: 1.45;
+            line-height: 1.48;
             color: var(--text-bright);
         }
 
@@ -437,7 +542,7 @@
             position: absolute;
             bottom: 12px;
             right: 12px;
-            background: #1e293b;
+            background: var(--surface-elevated);
             border: 1px solid var(--panel-border);
             color: var(--text-bright);
             border-radius: 50%;
@@ -448,7 +553,7 @@
             align-items: center;
             cursor: pointer;
             font-size: 1.3rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
             z-index: 500;
         }
 
@@ -459,6 +564,7 @@
             padding: 12px;
             width: 100%;
             box-sizing: border-box;
+            box-shadow: var(--panel-shadow);
         }
 
         .empty-sets-card {
@@ -466,14 +572,14 @@
             flex-direction: column;
             gap: 12px;
             padding: 14px;
-            background: #131c29;
+            background: var(--surface-subtle);
             border: 1px dashed var(--panel-border);
             border-radius: 8px;
             text-align: center;
         }
         .btn-migrate-now {
             background: var(--active-blue);
-            color: #05131a;
+            color: var(--btn-primary-text);
             border: none;
             border-radius: 8px;
             padding: 14px 16px;
@@ -490,8 +596,8 @@
         .btn-set-switch {
             width: 100%;
             border: 2px solid var(--panel-border);
-            background: #233145;
-            color: #ffffff;
+            background: var(--set-btn-bg);
+            color: var(--set-btn-text);
             font-size: 1.3rem;
             font-weight: 900;
             border-radius: 8px;
@@ -524,19 +630,20 @@
             width: 100%;
             background: var(--panel-bg);
             border: 2px solid var(--panel-border);
-            color: #ffffff;
+            color: var(--text-bright);
             font-weight: 900;
-            font-size: 1.2rem;
-            padding: 15px 10px;
+            font-size: 1.15rem;
+            padding: 13px 10px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: var(--panel-shadow);
         }
         .btn-home-share-primary:active {
-            background: var(--panel-border);
+            background: var(--surface-elevated);
             transform: scale(0.97);
         }
 
@@ -555,40 +662,124 @@
             font-size: 0.85rem;
             text-decoration: underline;
             cursor: pointer;
-            opacity: 0.55;
+            opacity: 0.72;
             padding: 4px;
             display: inline-block;
         }
         .btn-home-refresh-subtle:hover {
-            opacity: 0.9;
+            opacity: 1;
         }
         .btn-home-refresh-subtle:active {
             color: var(--stop-red);
-            opacity: 0.8;
+            opacity: 0.85;
+        }
+
+        /* ================= THEME SWITCHER (BOTTOM BAR) ================= */
+        .theme-switcher-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 10px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            flex-shrink: 0;
+            box-shadow: var(--panel-shadow);
+        }
+        .theme-switcher-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .theme-segmented {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--panel-border);
+            border-radius: 7px;
+        }
+        .btn-theme-opt {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 5px 11px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .btn-theme-opt:hover {
+            color: var(--text-bright);
+        }
+        .btn-theme-opt.active {
+            background: var(--footer-blue);
+            color: #ffffff;
+            border-color: var(--active-blue);
+        }
+        .theme-swatch {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            flex-shrink: 0;
+        }
+        .theme-swatch-default {
+            background: linear-gradient(135deg, #0f141c 50%, #00bcd4 50%);
+        }
+        .theme-swatch-ivory {
+            background: linear-gradient(135deg, #f6f2e9 50%, #9a5506 50%);
+            border-color: rgba(20, 32, 51, 0.35);
         }
 
         .ceremonial-footer {
             background-color: var(--footer-blue);
-            color: var(--text-bright);
-            padding: 12px 15px;
-            font-size: 1.02rem;
+            color: var(--footer-text);
+            padding: 11px 14px;
+            font-size: 0.98rem;
             font-weight: bold;
             letter-spacing: 0.3px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--banner-border);
             text-align: center;
             line-height: 1.35;
             box-sizing: border-box;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
         }
         .footer-sub-note {
             display: block;
-            font-size: 0.9rem;
-            color: var(--text-dim);
+            font-size: 0.88rem;
+            color: var(--footer-subtext);
             font-weight: normal;
+        }
+        .mobile-data-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--footer-control-bg);
+            padding: 7px 12px;
+            border-radius: 6px;
+            margin-top: 2px;
+        }
+        .mobile-data-label {
+            font-weight: normal;
+            font-size: 0.92rem;
+            color: var(--footer-subtext);
         }
 
         .modal-metric-footer {
@@ -598,16 +789,17 @@
             font-size: 0.9rem;
             border-top: 1px solid var(--panel-border);
             padding-top: 10px;
+            font-variant-numeric: tabular-nums;
         }
 
         @keyframes playPulse {
             0% { box-shadow: 0 0 15px 2px var(--play-green); }
-            50% { box-shadow: 0 0 30px 8px var(--play-green); filter: brightness(1.15); }
+            50% { box-shadow: 0 0 30px 8px var(--play-green); filter: brightness(1.12); }
             100% { box-shadow: 0 0 15px 2px var(--play-green); }
         }
         @keyframes stopPulse {
             0% { box-shadow: 0 0 20px 4px var(--stop-red); }
-            50% { box-shadow: 0 0 40px 12px var(--stop-red); filter: brightness(1.25); }
+            50% { box-shadow: 0 0 40px 12px var(--stop-red); filter: brightness(1.18); }
             100% { box-shadow: 0 0 20px 4px var(--stop-red); }
         }
 
@@ -615,7 +807,7 @@
         .operations-modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 7, 10, 0.85);
+            background: var(--modal-overlay-bg);
             display: none;
             justify-content: center;
             align-items: center;
@@ -624,7 +816,7 @@
         }
 
         .operations-dialog-box {
-            background: #131a24;
+            background: var(--modal-bg);
             border: 2px solid var(--panel-border);
             border-radius: 12px;
             width: 100%;
@@ -634,7 +826,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
         }
 
         .modal-header {
@@ -654,9 +846,9 @@
         .btn-modal-close {
             background: var(--footer-blue);
             border: 1px solid var(--panel-border);
-            color: white;
+            color: #ffffff;
             font-weight: 900;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             letter-spacing: 0.5px;
             border-radius: 8px;
             padding: 10px 20px;
@@ -697,6 +889,7 @@
 
         .running-time {
             font-family: monospace;
+            font-variant-numeric: tabular-nums;
             font-size: 1.05rem;
             color: var(--active-blue);
             font-weight: bold;
@@ -762,7 +955,7 @@
             gap: 8px;
         }
         .btn-vol {
-            background: #1e293b;
+            background: var(--surface-elevated);
             border: 1px solid var(--panel-border);
             color: var(--text-dim);
             font-weight: 800;
@@ -782,9 +975,9 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: #1e293b;
+            background: var(--toast-bg);
             border: 1px solid var(--active-blue);
-            color: #ffffff;
+            color: var(--toast-text);
             padding: 10px 18px;
             border-radius: 8px;
             font-size: 0.95rem;
@@ -832,8 +1025,8 @@
                     <span class="footer-sub-note" style="margin-top: 4px;">WBro. Robert Billing PGSwdB GLHer</span>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 6px; margin-top: 2px;">
-                    <span style="font-weight: normal; font-size: 0.95rem; color: var(--text-dim);">Allow Mobile Data Downloads:</span>
+                <div class="mobile-data-row">
+                    <span class="mobile-data-label">Allow Mobile Data Downloads:</span>
                     <input type="checkbox" id="mobileDataToggleCheckbox" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--active-blue);">
                 </div>
             </div>
@@ -841,14 +1034,28 @@
             <div class="home-action-row-container">
                 <button type="button" class="btn-home-share-primary" id="shareAppBtn">🔗 Share App Connection</button>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim); opacity: 0.65;">
-                    <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: monospace; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
-                    <span>Build: <span style="font-family: monospace; color: var(--active-blue); font-weight: bold;">v59</span></span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim);">
+                    <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: monospace; font-variant-numeric: tabular-nums; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
+                    <span>Build: <span style="font-family: monospace; font-variant-numeric: tabular-nums; color: var(--active-blue); font-weight: bold;">v59</span></span>
                 </div>
 
                 <div class="home-bottom-links">
                     <button type="button" class="btn-home-refresh-subtle" id="ownerSignInBtn">owner sign in</button>
                     <button type="button" class="btn-home-refresh-subtle" id="resetStorageBtn">reset / repair system storage</button>
+                </div>
+
+                <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
+                    <span class="theme-switcher-label">Theme</span>
+                    <div class="theme-segmented">
+                        <button type="button" class="btn-theme-opt active" data-theme-value="default" aria-pressed="true">
+                            <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
+                            Night Console
+                        </button>
+                        <button type="button" class="btn-theme-opt" data-theme-value="ivory" aria-pressed="false">
+                            <span class="theme-swatch theme-swatch-ivory" aria-hidden="true"></span>
+                            Ivory &amp; Brass
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -883,6 +1090,20 @@
                 </div>
             </div>
             <button type="button" class="btn-floating-deck-cog" id="btnOpenOptions">⚙️</button>
+        </div>
+
+        <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
+            <span class="theme-switcher-label">Theme</span>
+            <div class="theme-segmented">
+                <button type="button" class="btn-theme-opt active" data-theme-value="default" aria-pressed="true">
+                    <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
+                    Night Console
+                </button>
+                <button type="button" class="btn-theme-opt" data-theme-value="ivory" aria-pressed="false">
+                    <span class="theme-swatch theme-swatch-ivory" aria-hidden="true"></span>
+                    Ivory &amp; Brass
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1090,6 +1311,33 @@
           });
       }
 
+      function applyFallbackTheme(theme) {
+        var resolved = theme === 'ivory' ? 'ivory' : 'default';
+        if (resolved === 'ivory') {
+          document.documentElement.setAttribute('data-theme', 'ivory');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+        try { localStorage.setItem('lodgeMusicTheme', resolved); } catch (e) {}
+        var btns = document.querySelectorAll('[data-theme-value]');
+        for (var i = 0; i < btns.length; i++) {
+          var active = btns[i].getAttribute('data-theme-value') === resolved;
+          btns[i].classList.toggle('active', active);
+          btns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+      }
+      (function () {
+        var initial = 'default';
+        try { initial = localStorage.getItem('lodgeMusicTheme') === 'ivory' ? 'ivory' : 'default'; } catch (e) {}
+        applyFallbackTheme(initial);
+        var btns = document.querySelectorAll('[data-theme-value]');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].addEventListener('click', function () {
+            applyFallbackTheme(this.getAttribute('data-theme-value'));
+          });
+        }
+      })();
+
       if ($('btnBackHome')) $('btnBackHome').onclick = function () {
         stopAudio();
         $('screenConsole').classList.remove('active-view');
@@ -1113,13 +1361,13 @@
       };
       if ($('ownerSignInBtn')) $('ownerSignInBtn').onclick = function () {
         var ov = document.createElement('div');
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(5,7,10,0.88);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
+        ov.style.cssText = 'position:fixed;inset:0;background:var(--modal-overlay-bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
         ov.innerHTML =
-          '<div style="background:#131a24;border:2px solid #f39c12;border-radius:12px;max-width:480px;width:100%;padding:20px;color:#fff;display:flex;flex-direction:column;gap:12px;">' +
-            '<div style="font-size:1.15rem;font-weight:900;color:#f39c12;">Cloud Sign-In Not Built on This Host</div>' +
-            '<div style="font-size:0.93rem;line-height:1.45;color:#cbd5e1;">The public sets below loaded from <code>sets.json</code>, but the compiled cloud module (<code>./assets/console.js</code>) is missing on this static host.</div>' +
-            '<div style="font-size:0.9rem;line-height:1.45;color:#cbd5e1;">On GitHub Pages, open repository <strong>Settings → Pages → Source</strong>, choose <strong>GitHub Actions</strong> (workflow included in <code>.github/workflows/deploy-pages.yml</code>), and ensure <code>' + (window.location.hostname || 'this domain') + '</code> is in Firebase Auth Authorized Domains.</div>' +
-            '<button type="button" id="closeFallbackNoticeBtn" style="background:#00bcd4;color:#05131a;border:none;border-radius:8px;padding:10px 14px;font-weight:900;cursor:pointer;">OK</button>' +
+          '<div style="background:var(--modal-bg);border:2px solid var(--cue-gold);border-radius:12px;max-width:480px;width:100%;padding:20px;color:var(--text-bright);display:flex;flex-direction:column;gap:12px;">' +
+            '<div style="font-size:1.15rem;font-weight:900;color:var(--cue-gold);">Cloud Sign-In Not Built on This Host</div>' +
+            '<div style="font-size:0.93rem;line-height:1.45;color:var(--text-dim);">The public sets below loaded from <code>sets.json</code>, but the compiled cloud module (<code>./assets/console.js</code>) is missing on this static host.</div>' +
+            '<div style="font-size:0.9rem;line-height:1.45;color:var(--text-dim);">On GitHub Pages, open repository <strong>Settings → Pages → Source</strong>, choose <strong>GitHub Actions</strong> (workflow included in <code>.github/workflows/deploy-pages.yml</code>), and ensure <code>' + (window.location.hostname || 'this domain') + '</code> is in Firebase Auth Authorized Domains.</div>' +
+            '<button type="button" id="closeFallbackNoticeBtn" style="background:var(--active-blue);color:var(--btn-primary-text);border:none;border-radius:8px;padding:10px 14px;font-weight:900;cursor:pointer;">OK</button>' +
           '</div>';
         document.body.appendChild(ov);
         $('closeFallbackNoticeBtn').onclick = function () { ov.remove(); };
@@ -1147,7 +1395,7 @@
         })
         .catch(function () {
           var row = $('setSwitcherRow');
-          if (row) row.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:18px;color:#ffb4a9;">Unable to load sets.json.</div>';
+          if (row) row.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:18px;color:var(--error-text);">Unable to load sets.json.</div>';
         });
     }
 

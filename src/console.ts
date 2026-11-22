@@ -14,6 +14,7 @@ import {
   subscribeToSets,
   subscribeToTracks
 } from './store';
+import { initThemeSwitcher } from './theme';
 import type { LegacySetEntry, LegacyTrackEntry, SetConfig, TrackButton } from './types';
 
 declare global {
@@ -117,21 +118,21 @@ function showSignInErrorNotice(err: unknown): void {
     const overlay = document.createElement('div');
     overlay.id = 'authHelpOverlay';
     overlay.style.cssText =
-      'position:fixed;inset:0;background:rgba(5,7,10,0.86);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
+      'position:fixed;inset:0;background:var(--modal-overlay-bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
     overlay.innerHTML = `
-      <div style="background:#131a24;border:2px solid #f39c12;border-radius:12px;max-width:480px;width:100%;padding:20px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 32px rgba(0,0,0,0.75);">
-        <div style="font-size:1.15rem;font-weight:900;color:#f39c12;">Authorize This Domain for Sign-In</div>
-        <div style="font-size:0.95rem;line-height:1.45;color:#cbd5e1;">
-          Google Sign-In is blocked from <strong style="color:#00bcd4;">${host}</strong> because this hostname is not yet listed in Firebase Authentication Authorized Domains.
+      <div style="background:var(--modal-bg);border:2px solid var(--cue-gold);border-radius:12px;max-width:480px;width:100%;padding:20px;color:var(--text-bright);display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
+        <div style="font-size:1.15rem;font-weight:900;color:var(--cue-gold);">Authorize This Domain for Sign-In</div>
+        <div style="font-size:0.95rem;line-height:1.45;color:var(--text-dim);">
+          Google Sign-In is blocked from <strong style="color:var(--active-blue);">${host}</strong> because this hostname is not yet listed in Firebase Authentication Authorized Domains.
         </div>
-        <ol style="margin:0;padding-left:20px;font-size:0.9rem;line-height:1.5;color:#cbd5e1;">
-          <li>Open <a href="https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings" target="_blank" rel="noopener noreferrer" style="color:#00bcd4;font-weight:700;">Firebase Authentication Settings</a>.</li>
+        <ol style="margin:0;padding-left:20px;font-size:0.9rem;line-height:1.5;color:var(--text-dim);">
+          <li>Open <a href="https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings" target="_blank" rel="noopener noreferrer" style="color:var(--active-blue);font-weight:700;">Firebase Authentication Settings</a>.</li>
           <li>Under <strong>Authorized domains</strong>, click <strong>Add domain</strong>.</li>
-          <li>Enter <code style="background:#0f141c;padding:2px 6px;border-radius:4px;color:#2ecc71;">${host}</code> and save.</li>
+          <li>Enter <code style="background:var(--surface-subtle);padding:2px 6px;border-radius:4px;color:var(--play-green);">${host}</code> and save.</li>
         </ol>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-          <button type="button" id="copyUnauthorizedHostBtn" style="flex:1;min-width:140px;background:#00bcd4;color:#05131a;border:none;border-radius:8px;padding:10px 12px;font-weight:900;cursor:pointer;">📋 Copy "${host}"</button>
-          <button type="button" id="closeAuthHelpBtn" style="background:#1e293b;color:#fff;border:1px solid #384a66;border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer;">Close</button>
+          <button type="button" id="copyUnauthorizedHostBtn" style="flex:1;min-width:140px;background:var(--active-blue);color:var(--btn-primary-text);border:none;border-radius:8px;padding:10px 12px;font-weight:900;cursor:pointer;">📋 Copy "${host}"</button>
+          <button type="button" id="closeAuthHelpBtn" style="background:var(--surface-elevated);color:var(--text-bright);border:1px solid var(--panel-border);border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer;">Close</button>
         </div>
       </div>
     `;
@@ -1323,6 +1324,8 @@ function renderAuthControls(): void {
 }
 
 function initConsole(): void {
+  initThemeSwitcher();
+
   const checkbox = byId<HTMLInputElement>('mobileDataToggleCheckbox');
   if (checkbox) {
     checkbox.checked = localStorage.getItem('allowMobileDataDownloads') === 'true';
@@ -1447,7 +1450,7 @@ function initConsole(): void {
         .catch(() => {
           const row = byId<HTMLDivElement>('setSwitcherRow');
           if (row) {
-            row.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: #ffb4a9;">Unable to reach cloud configuration. Check your connection and reload.</div>';
+            row.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: var(--error-text);">Unable to reach cloud configuration. Check your connection and reload.</div>';
           }
           showToast('Failed to load configuration from cloud.', 'error');
         });

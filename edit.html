@@ -5,17 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lodge Music — Configuration Studio</title>
     <meta name="description" content="Owner-only configuration studio for Lodge Music sets, button colors, text, cues, and ordering.">
+    <script>
+        try {
+            if (localStorage.getItem('lodgeMusicTheme') === 'ivory') {
+                document.documentElement.setAttribute('data-theme', 'ivory');
+            }
+        } catch (e) {}
+    </script>
     <style>
         :root {
             --bg-dark: #0f141c;
             --panel-bg: #161f2b;
             --panel-border: #2c3e55;
+            --panel-border-hover: #4f6b8f;
+            --surface-elevated: #233145;
+            --surface-input: #1c2738;
+            --surface-subtle: #111722;
+            --preview-grid-bg: #0d121a;
+            --badge-clean-bg: #1e293b;
+            --order-btn-bg: #2b3a4f;
             --text-bright: #ffffff;
             --text-dim: #9ab0c7;
             --active-blue: #00bcd4;
+            --btn-primary-text: #05131a;
             --play-green: #2ecc71;
             --stop-red: #e74c3c;
             --cue-gold: #f39c12;
+            --footer-blue: #0f2c59;
+            --active-ring: #ffffff;
+            --active-ring-shadow: 0 0 12px rgba(255,255,255,0.65);
+            --toast-bg: #1e293b;
+            --toast-text: #ffffff;
+            --panel-shadow: none;
             --btn-darkblue: #26354a;
             --btn-blue: #4a6785;
             --btn-yellow: #7a5a13;
@@ -23,6 +44,39 @@
             --btn-red: #661a1a;
             --btn-orange: #7a3711;
             --btn-purple: #3f1b69;
+        }
+
+        html[data-theme="ivory"] {
+            --bg-dark: #f6f2e9;
+            --panel-bg: #ffffff;
+            --panel-border: #cfc5b3;
+            --panel-border-hover: #9f927d;
+            --surface-elevated: #ece5d8;
+            --surface-input: #faf7f0;
+            --surface-subtle: #f3eee3;
+            --preview-grid-bg: #ebe4d6;
+            --badge-clean-bg: #ece5d8;
+            --order-btn-bg: #ebe4d6;
+            --text-bright: #142033;
+            --text-dim: #515e72;
+            --active-blue: #0c6e87;
+            --btn-primary-text: #ffffff;
+            --play-green: #167948;
+            --stop-red: #b82e24;
+            --cue-gold: #9a5506;
+            --footer-blue: #183157;
+            --active-ring: #142033;
+            --active-ring-shadow: 0 0 0 2px #f6f2e9, 0 0 0 4px #0c6e87;
+            --toast-bg: #183157;
+            --toast-text: #ffffff;
+            --panel-shadow: 0 1px 4px rgba(20, 32, 51, 0.06);
+            --btn-darkblue: #1e365c;
+            --btn-blue: #2b5c8a;
+            --btn-yellow: #99640b;
+            --btn-green: #1b6339;
+            --btn-red: #8e2424;
+            --btn-orange: #a1440e;
+            --btn-purple: #542382;
         }
 
         * { box-sizing: border-box; }
@@ -207,7 +261,7 @@
         }
 
         .track-item {
-            background: #1c2738;
+            background: var(--surface-input);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 10px 12px;
@@ -219,11 +273,11 @@
             transition: border-color 0.15s, background 0.15s;
         }
         .track-item:hover {
-            border-color: #4f6b8f;
+            border-color: var(--panel-border-hover);
         }
         .track-item.selected {
             border-color: var(--active-blue);
-            background: rgba(0, 188, 212, 0.1);
+            background: rgba(0, 188, 212, 0.12);
         }
         .track-item.dragging {
             opacity: 0.45;
@@ -288,9 +342,9 @@
             flex-shrink: 0;
         }
         .btn-order {
-            background: #2b3a4f;
+            background: var(--order-btn-bg);
             border: 1px solid var(--panel-border);
-            color: #ffffff;
+            color: var(--text-bright);
             border-radius: 6px;
             padding: 6px 10px;
             font-weight: bold;
@@ -306,7 +360,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            background: #0d121a;
+            background: var(--preview-grid-bg);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 10px;
@@ -330,8 +384,8 @@
             word-break: break-word;
         }
         .preview-chip.selected {
-            border-color: #ffffff;
-            box-shadow: 0 0 12px rgba(255,255,255,0.65);
+            border-color: var(--active-ring);
+            box-shadow: var(--active-ring-shadow);
         }
         .preview-chip.color-darkblue { background-color: var(--btn-darkblue); }
         .preview-chip.color-blue     { background-color: var(--btn-blue); }
@@ -352,7 +406,7 @@
             color: var(--text-dim);
         }
         input[type="text"], textarea, select {
-            background: #1c2738;
+            background: var(--surface-input);
             color: var(--text-bright);
             border: 1px solid var(--panel-border);
             padding: 10px 12px;
@@ -388,8 +442,8 @@
             transition: transform 0.1s, box-shadow 0.15s;
         }
         .color-swatch-btn.active {
-            border-color: #ffffff !important;
-            box-shadow: 0 0 12px rgba(255,255,255,0.65);
+            border-color: var(--active-ring) !important;
+            box-shadow: var(--active-ring-shadow);
             transform: scale(1.03);
         }
 
@@ -432,12 +486,12 @@
         }
         .btn-primary {
             background: var(--active-blue);
-            color: #05131a;
+            color: var(--btn-primary-text);
         }
         .btn-secondary {
-            background: #233145;
+            background: var(--surface-elevated);
             border-color: var(--panel-border);
-            color: #ffffff;
+            color: var(--text-bright);
         }
         .btn-add {
             background: #1b6b3a;
@@ -458,7 +512,7 @@
             padding: 4px 8px;
             border-radius: 5px;
         }
-        .badge-clean { background: #1e293b; color: var(--text-dim); }
+        .badge-clean { background: var(--badge-clean-bg); color: var(--text-dim); }
         .badge-dirty { background: rgba(243, 156, 18, 0.2); color: var(--cue-gold); }
         .badge-saving { background: rgba(0, 188, 212, 0.2); color: var(--active-blue); }
         .badge-saved { background: rgba(46, 204, 113, 0.2); color: var(--play-green); }
@@ -481,13 +535,79 @@
             font-size: 0.92rem;
         }
 
+        .theme-switcher-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 14px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            box-shadow: var(--panel-shadow);
+        }
+        .theme-switcher-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .theme-segmented {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--panel-border);
+            border-radius: 7px;
+        }
+        .btn-theme-opt {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 36px;
+            padding: 6px 12px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .btn-theme-opt:hover {
+            color: var(--text-bright);
+        }
+        .btn-theme-opt.active {
+            background: var(--footer-blue);
+            color: #ffffff;
+            border-color: var(--active-blue);
+        }
+        .theme-swatch {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            flex-shrink: 0;
+        }
+        .theme-swatch-default {
+            background: linear-gradient(135deg, #0f141c 50%, #00bcd4 50%);
+        }
+        .theme-swatch-ivory {
+            background: linear-gradient(135deg, #f6f2e9 50%, #9a5506 50%);
+            border-color: rgba(20, 32, 51, 0.35);
+        }
+
         .editor-toast {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: #1e293b;
+            background: var(--toast-bg);
             border: 1px solid var(--active-blue);
-            color: #ffffff;
+            color: var(--toast-text);
             padding: 11px 18px;
             border-radius: 8px;
             font-size: 0.92rem;
@@ -574,7 +694,7 @@
             </div>
 
             <!-- Collapsible Migration & JSON Import/Export Panel -->
-            <div id="migrationPanelBody" style="display:none; flex-direction:column; gap:12px; background:#111722; border:1px solid var(--panel-border); border-radius:8px; padding:14px;">
+            <div id="migrationPanelBody" style="display:none; flex-direction:column; gap:12px; background:var(--surface-subtle); border:1px solid var(--panel-border); border-radius:8px; padding:14px;">
                 <div style="font-weight:800; color: var(--cue-gold);">Move Existing JSON Configuration to Cloud</div>
                 <div class="inline-row" style="gap:16px;">
                     <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -674,6 +794,20 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="theme-switcher-bar" role="group" aria-label="Visual theme">
+        <span class="theme-switcher-label">Theme</span>
+        <div class="theme-segmented">
+            <button type="button" class="btn-theme-opt active" data-theme-value="default" aria-pressed="true">
+                <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
+                Night Console
+            </button>
+            <button type="button" class="btn-theme-opt" data-theme-value="ivory" aria-pressed="false">
+                <span class="theme-swatch theme-swatch-ivory" aria-hidden="true"></span>
+                Ivory &amp; Brass
+            </button>
+        </div>
     </div>
 </div>
 
