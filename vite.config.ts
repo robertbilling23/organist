@@ -12,12 +12,12 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        console: resolve(__dirname, 'src/console.ts'),
-        editor: resolve(__dirname, 'src/editor.ts')
+        console: resolve(import.meta.dirname, 'src/console.ts'),
+        editor: resolve(import.meta.dirname, 'src/editor.ts')
       },
       output: {
         entryFileNames: '[name].js',
-        chunkFileNames: '[name]-[hash].js',
+        chunkFileNames: '[name].js',
         assetFileNames: '[name]-[hash][extname]'
       }
     }

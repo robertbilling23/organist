@@ -1,16 +1,20 @@
 import type { User } from 'firebase/auth';
 import {
   checkIsAdminUser,
+  consumeAuthRedirectResult,
+  FIREBASE_PROJECT_ID,
   signInWithGoogle,
   signOutUser,
   subscribeAuth
 } from './firebase';
 import {
   migrateLegacyConfiguration,
+  normalizeColor,
+  normalizeLyrics,
   subscribeToSets,
   subscribeToTracks
 } from './store';
-import type { SetConfig, TrackButton } from './types';
+import type { LegacySetEntry, LegacyTrackEntry, SetConfig, TrackButton } from './types';
 
 declare global {
   interface Navigator {
@@ -19,7 +23,12 @@ declare global {
       saveData?: boolean;
     };
   }
+  interface Window {
+    __lodgeMusicBooted?: boolean;
+  }
 }
+
+window.__lodgeMusicBooted = true;
 
 interface MediaElementAsset {
   isMediaElement: true;
@@ -88,7 +97,57 @@ function showToast(message: string, variant: 'info' | 'success' | 'error' = 'inf
   toast.className = `app-toast visible toast-${variant}`;
   window.setTimeout(() => {
     toast.classList.remove('visible');
-  }, 3600);
+  }, 4200);
+}
+
+function showSignInErrorNotice(err: unknown): void {
+  const code = (err as { code?: string })?.code || '';
+  const msg = err instanceof Error ? err.message : String(err || 'Sign-in cancelled.');
+
+  if (code === 'auth/popup-closed-by-user' || msg.includes('auth/popup-closed-by-user')) {
+    showToast('Sign-in was cancelled.', 'info');
+    return;
+  }
+
+  if (code === 'auth/unauthorized-domain' || msg.includes('auth/unauthorized-domain')) {
+    const host = window.location.hostname || window.location.host;
+    const existing = byId<HTMLDivElement>('authHelpOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'authHelpOverlay';
+    overlay.style.cssText =
+      'position:fixed;inset:0;background:rgba(5,7,10,0.86);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
+    overlay.innerHTML = `
+      <div style="background:#131a24;border:2px solid #f39c12;border-radius:12px;max-width:480px;width:100%;padding:20px;color:#fff;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 32px rgba(0,0,0,0.75);">
+        <div style="font-size:1.15rem;font-weight:900;color:#f39c12;">Authorize This Domain for Sign-In</div>
+        <div style="font-size:0.95rem;line-height:1.45;color:#cbd5e1;">
+          Google Sign-In is blocked from <strong style="color:#00bcd4;">${host}</strong> because this hostname is not yet listed in Firebase Authentication Authorized Domains.
+        </div>
+        <ol style="margin:0;padding-left:20px;font-size:0.9rem;line-height:1.5;color:#cbd5e1;">
+          <li>Open <a href="https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings" target="_blank" rel="noopener noreferrer" style="color:#00bcd4;font-weight:700;">Firebase Authentication Settings</a>.</li>
+          <li>Under <strong>Authorized domains</strong>, click <strong>Add domain</strong>.</li>
+          <li>Enter <code style="background:#0f141c;padding:2px 6px;border-radius:4px;color:#2ecc71;">${host}</code> and save.</li>
+        </ol>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button type="button" id="copyUnauthorizedHostBtn" style="flex:1;min-width:140px;background:#00bcd4;color:#05131a;border:none;border-radius:8px;padding:10px 12px;font-weight:900;cursor:pointer;">📋 Copy "${host}"</button>
+          <button type="button" id="closeAuthHelpBtn" style="background:#1e293b;color:#fff;border:1px solid #384a66;border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer;">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    byId<HTMLButtonElement>('copyUnauthorizedHostBtn')?.addEventListener('click', () => {
+      void navigator.clipboard?.writeText(host).then(() => {
+        showToast(`Copied "${host}" to clipboard!`, 'success');
+      });
+    });
+    byId<HTMLButtonElement>('closeAuthHelpBtn')?.addEventListener('click', () => {
+      overlay.remove();
+    });
+    return;
+  }
+
+  showToast(msg, 'error');
 }
 
 function formatTime(secs: number): string {
@@ -241,7 +300,7 @@ async function decodeAudioAsset(arrayBuffer: ArrayBuffer, filePath: string): Pro
 async function updateOfflineDiskMetricDisplay(): Promise<void> {
   if (!('caches' in window)) return;
   try {
-    const storageVault = await caches.open('lodge-music-v58');
+    const storageVault = await caches.open('lodge-music-v59');
     const storedRequests = await storageVault.keys();
     let totalEstimatedMB = 0.08;
 
@@ -851,7 +910,7 @@ async function handleMissingAudioFileUpload(inputEl: HTMLInputElement): Promise<
 
     if ('caches' in window) {
       try {
-        const storageVault = await caches.open('lodge-music-v58');
+        const storageVault = await caches.open('lodge-music-v59');
         const cleanUrl = new URL(track.file, window.location.href).href;
         await storageVault.put(
           new Request(cleanUrl),
@@ -993,6 +1052,21 @@ function switchCeremonialSet(set: SetConfig, isInitialBoot: boolean): void {
   if (cueEl) cueEl.innerText = 'Syncing cloud configuration... Please standby.';
 
   let firstLoad = true;
+  if (set.id.startsWith('local_') && set.sourceFile) {
+    void loadLocalFallbackTracks(set).then((loadedTracks) => {
+      tracks = loadedTracks;
+      currentTrackIndex = 0;
+      buildPlaylistGrid(true);
+      if (tracks.length > 0) {
+        loadTrack(0);
+        void cacheAllAudioToRAM();
+      } else {
+        loadTrack(0);
+      }
+    });
+    return;
+  }
+
   unsubscribeTracks = subscribeToTracks(
     set.id,
     (loadedTracks) => {
@@ -1031,9 +1105,52 @@ function switchCeremonialSet(set: SetConfig, isInitialBoot: boolean): void {
     },
     (err) => {
       console.error('Failed to sync tracks:', err);
-      if (cueEl) cueEl.innerText = 'Unable to load set configuration from cloud.';
+      if (set.sourceFile) {
+        void loadLocalFallbackTracks(set).then((fallbackTracks) => {
+          tracks = fallbackTracks;
+          currentTrackIndex = 0;
+          buildPlaylistGrid(true);
+          loadTrack(0);
+          if (tracks.length > 0) void cacheAllAudioToRAM();
+        });
+      } else if (cueEl) {
+        cueEl.innerText = 'Unable to load set configuration from cloud.';
+      }
     }
   );
+}
+
+async function loadLocalFallbackSets(): Promise<SetConfig[]> {
+  const res = await fetch('./sets.json?v=' + Date.now());
+  if (!res.ok) throw new Error('Unable to load local sets.json');
+  const legacySets = (await res.json()) as LegacySetEntry[];
+  return legacySets.map((s, idx) => ({
+    id: `local_${String(s.id)}`,
+    legacyId: typeof s.id === 'number' ? s.id : Number.parseInt(String(s.id), 10) || idx + 1,
+    label: s.label || `Set ${idx + 1}`,
+    sourceFile: s.file,
+    order: idx
+  }));
+}
+
+async function loadLocalFallbackTracks(set: SetConfig): Promise<TrackButton[]> {
+  if (!set.sourceFile) return [];
+  const res = await fetch('./' + set.sourceFile + '?v=' + Date.now());
+  if (!res.ok) return [];
+  const raw = (await res.json()) as LegacyTrackEntry[];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((t) => t && (t.title || t.file))
+    .map((t, idx) => ({
+      id: `local_trk_${idx}`,
+      setId: set.id,
+      title: t.title || 'Untitled Track',
+      color: normalizeColor(t.color),
+      file: t.file || 'audio/filename.mp3',
+      cue: t.cue || '',
+      lyrics: normalizeLyrics(t.lyrics),
+      order: idx
+    }));
 }
 
 function navigateToHomeScreen(): void {
@@ -1247,17 +1364,23 @@ function initConsole(): void {
     void handleMissingAudioFileUpload(e.target as HTMLInputElement);
   });
 
-  byId<HTMLButtonElement>('ownerSignInBtn')?.addEventListener('click', async () => {
+  const signInBtn = byId<HTMLButtonElement>('ownerSignInBtn');
+  signInBtn?.addEventListener('click', async () => {
+    signInBtn.disabled = true;
+    const prevText = signInBtn.innerText;
+    signInBtn.innerText = 'signing in...';
     try {
       await signInWithGoogle();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Sign-in cancelled.';
-      if (msg.includes('auth/unauthorized-domain')) {
-        showToast(`Add "${window.location.hostname}" to Firebase Auth Authorized Domains to sign in from here.`, 'error');
-      } else {
-        showToast(msg, 'error');
-      }
+      showSignInErrorNotice(err);
+    } finally {
+      signInBtn.disabled = false;
+      signInBtn.innerText = prevText;
     }
+  });
+
+  void consumeAuthRedirectResult().catch((err) => {
+    showSignInErrorNotice(err);
   });
 
   const switcherRow = byId<HTMLDivElement>('setSwitcherRow');
@@ -1270,6 +1393,26 @@ function initConsole(): void {
     isAdmin = await checkIsAdminUser(user);
     renderAuthControls();
   });
+
+  const handleSetUrlRouting = (): void => {
+    if (!initialUrlHandled && dynamicSets.length > 0) {
+      initialUrlHandled = true;
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetSetParam = urlParams.get('set');
+      if (targetSetParam) {
+        const matchedSet = dynamicSets.find(
+          (s) =>
+            s.id === targetSetParam ||
+            (s.legacyId !== undefined && String(s.legacyId) === targetSetParam)
+        );
+        if (matchedSet) {
+          switchCeremonialSet(matchedSet, true);
+          return;
+        }
+      }
+      byId<HTMLDivElement>('screenHome')?.classList.add('active-view');
+    }
+  };
 
   unsubscribeSets = subscribeToSets(
     (sets) => {
@@ -1288,31 +1431,26 @@ function initConsole(): void {
         }
       }
 
-      if (!initialUrlHandled && dynamicSets.length > 0) {
-        initialUrlHandled = true;
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetSetParam = urlParams.get('set');
-        if (targetSetParam) {
-          const matchedSet = dynamicSets.find(
-            (s) =>
-              s.id === targetSetParam ||
-              (s.legacyId !== undefined && String(s.legacyId) === targetSetParam)
-          );
-          if (matchedSet) {
-            switchCeremonialSet(matchedSet, true);
-            return;
-          }
-        }
-        byId<HTMLDivElement>('screenHome')?.classList.add('active-view');
-      }
+      handleSetUrlRouting();
     },
     (err) => {
       console.error('Failed to load ceremonial sets from cloud:', err);
-      const row = byId<HTMLDivElement>('setSwitcherRow');
-      if (row) {
-        row.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: #ffb4a9;">Unable to reach cloud configuration. Check your connection and reload.</div>';
-      }
-      showToast('Failed to load configuration from cloud.', 'error');
+      void loadLocalFallbackSets()
+        .then((localSets) => {
+          if (dynamicSets.length === 0) {
+            dynamicSets = localSets;
+            buildSetSwitcherUI();
+            handleSetUrlRouting();
+            showToast('Loaded offline local setlists (cloud unavailable).', 'info');
+          }
+        })
+        .catch(() => {
+          const row = byId<HTMLDivElement>('setSwitcherRow');
+          if (row) {
+            row.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: #ffb4a9;">Unable to reach cloud configuration. Check your connection and reload.</div>';
+          }
+          showToast('Failed to load configuration from cloud.', 'error');
+        });
     }
   );
 

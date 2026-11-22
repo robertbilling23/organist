@@ -843,7 +843,7 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 0.82rem; color: var(--text-dim); opacity: 0.65;">
                     <span>Disk Storage: <span id="diskStorageDisplay" style="font-family: monospace; color: var(--play-green); font-weight: bold;">0.00 MB</span></span>
-                    <span>Build: <span style="font-family: monospace; color: var(--active-blue); font-weight: bold;">v58</span></span>
+                    <span>Build: <span style="font-family: monospace; color: var(--active-blue); font-weight: bold;">v59</span></span>
                 </div>
 
                 <div class="home-bottom-links">
@@ -938,6 +938,225 @@
 
 <div class="app-toast" id="appToast"></div>
 
-<script type="module" src="./assets/console.js"></script>
+<script type="module" src="./assets/console.js" id="consoleModuleScript"></script>
+<script>
+  (function () {
+    var fallbackStarted = false;
+    function bootStaticFallback() {
+      if (window.__lodgeMusicBooted || fallbackStarted) return;
+      fallbackStarted = true;
+
+      var sets = [];
+      var activeSet = null;
+      var tracks = [];
+      var currentIdx = 0;
+      var audioEl = null;
+      var isPlaying = false;
+      var volume = 1.0;
+      var fadeTimer = null;
+
+      function $(id) { return document.getElementById(id); }
+      function toast(msg) {
+        var t = $('appToast');
+        if (!t) return;
+        t.textContent = msg;
+        t.className = 'app-toast visible toast-info';
+        setTimeout(function () { t.classList.remove('visible'); }, 4000);
+      }
+      function fmt(secs) {
+        if (!isFinite(secs) || secs <= 0) return '0:00';
+        var m = Math.floor(secs / 60);
+        var s = Math.floor(secs % 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+      }
+      function stopAudio() {
+        if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+        isPlaying = false;
+        if (audioEl) {
+          try { audioEl.pause(); audioEl.currentTime = 0; } catch (e) {}
+          audioEl = null;
+        }
+        var chip = $('chip-' + currentIdx);
+        if (chip) chip.classList.remove('playing-now', 'fading-now');
+        if ($('playBtn')) { $('playBtn').disabled = tracks.length === 0; $('playBtn').innerText = '▶ PLAY'; }
+        if ($('fadeBtn')) $('fadeBtn').disabled = true;
+      }
+      function loadTrack(idx) {
+        stopAudio();
+        currentIdx = idx;
+        var chips = document.querySelectorAll('.nav-chip');
+        for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active', 'playing-now', 'fading-now');
+        var chip = $('chip-' + idx);
+        if (chip) chip.classList.add('active');
+        var trk = tracks[idx];
+        if (!trk) return;
+        if ($('tickerTrackTitle')) $('tickerTrackTitle').innerText = trk.title || 'Untitled';
+        if ($('trackTitle')) $('trackTitle').innerText = trk.title || 'Untitled';
+        if ($('trackFilenameReadout')) $('trackFilenameReadout').innerText = (trk.file || '').split('/').pop() || trk.file || '';
+        if ($('cueText')) $('cueText').innerText = trk.cue || 'No special cues assigned.';
+        if ($('trackTime')) $('trackTime').innerText = '0:00 / 0:00';
+        if ($('timelineProgress')) $('timelineProgress').value = '0';
+        if ($('playBtn')) { $('playBtn').disabled = false; $('playBtn').innerText = '▶ PLAY'; }
+        var lp = $('lyricsPanel');
+        if (lp) {
+          lp.innerHTML = '';
+          var lines = Array.isArray(trk.lyrics) ? trk.lyrics : [];
+          if (lines.length === 0) {
+            lp.innerHTML = '<div class="lyric-line" style="color:var(--text-dim);margin-top:20px;">(Instrumental / No Words)</div>';
+          } else {
+            lines.forEach(function (line) {
+              var div = document.createElement('div');
+              div.className = 'lyric-line';
+              div.innerText = line;
+              lp.appendChild(div);
+            });
+          }
+        }
+      }
+      function playCurrent() {
+        var trk = tracks[currentIdx];
+        if (!trk || isPlaying) return;
+        audioEl = new Audio(trk.file);
+        audioEl.volume = volume;
+        audioEl.ontimeupdate = function () {
+          if (!audioEl) return;
+          var dur = isFinite(audioEl.duration) ? audioEl.duration : 0;
+          if ($('trackTime')) $('trackTime').innerText = fmt(audioEl.currentTime) + ' / ' + fmt(dur);
+          if ($('timelineProgress') && dur > 0) $('timelineProgress').value = String((audioEl.currentTime / dur) * 100);
+        };
+        audioEl.onended = function () {
+          stopAudio();
+          if (currentIdx + 1 < tracks.length) loadTrack(currentIdx + 1);
+        };
+        audioEl.play().then(function () {
+          isPlaying = true;
+          var chip = $('chip-' + currentIdx);
+          if (chip) { chip.classList.remove('active'); chip.classList.add('playing-now'); }
+          if ($('playBtn')) { $('playBtn').disabled = true; $('playBtn').innerText = '▶ PLAYING'; }
+          if ($('fadeBtn')) $('fadeBtn').disabled = false;
+        }).catch(function () {
+          toast('Unable to play ' + trk.file);
+        });
+      }
+      function fadeCurrent() {
+        if (!isPlaying || !audioEl || fadeTimer) return;
+        if ($('fadeBtn')) $('fadeBtn').disabled = true;
+        var chip = $('chip-' + currentIdx);
+        if (chip) { chip.classList.remove('playing-now'); chip.classList.add('fading-now'); }
+        var step = volume / 25;
+        var v = volume;
+        fadeTimer = setInterval(function () {
+          v -= step;
+          if (v > 0.02 && audioEl) {
+            audioEl.volume = Math.max(0, v);
+          } else {
+            stopAudio();
+            if (currentIdx + 1 < tracks.length) loadTrack(currentIdx + 1);
+          }
+        }, 50);
+      }
+      function openSet(setObj) {
+        activeSet = setObj;
+        if ($('headerTitleDisplay')) $('headerTitleDisplay').innerText = setObj.label;
+        $('screenHome').classList.remove('active-view');
+        $('screenConsole').classList.add('active-view');
+        fetch('./' + setObj.file + '?v=' + Date.now())
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            tracks = Array.isArray(data) ? data : [];
+            var grid = $('playlistGrid');
+            if (grid) {
+              grid.innerHTML = '';
+              tracks.forEach(function (trk, idx) {
+                var chip = document.createElement('div');
+                var col = (trk.color || 'blue').toLowerCase();
+                chip.className = 'nav-chip color-' + col;
+                chip.id = 'chip-' + idx;
+                chip.innerText = trk.title || 'Track';
+                chip.onclick = function () {
+                  if (currentIdx === idx) {
+                    if (isPlaying) fadeCurrent(); else playCurrent();
+                  } else {
+                    loadTrack(idx);
+                  }
+                };
+                grid.appendChild(chip);
+              });
+            }
+            if (tracks.length > 0) loadTrack(0);
+          })
+          .catch(function () {
+            if ($('cueText')) $('cueText').innerText = 'Unable to load set tracks.';
+          });
+      }
+
+      if ($('btnBackHome')) $('btnBackHome').onclick = function () {
+        stopAudio();
+        $('screenConsole').classList.remove('active-view');
+        $('screenHome').classList.add('active-view');
+      };
+      if ($('btnOpenOptions')) $('btnOpenOptions').onclick = function () { $('operationsModal').style.display = 'flex'; };
+      if ($('btnCloseOptions')) $('btnCloseOptions').onclick = function () { $('operationsModal').style.display = 'none'; };
+      if ($('playBtn')) $('playBtn').onclick = playCurrent;
+      if ($('fadeBtn')) $('fadeBtn').onclick = fadeCurrent;
+      if ($('shareAppBtn')) $('shareAppBtn').onclick = function () {
+        var url = window.location.origin + window.location.pathname;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { toast('Public app link copied!'); }).catch(function () {});
+        }
+        if (navigator.share) { navigator.share({ title: 'Lodge Music', url: url }).catch(function () {}); }
+      };
+      if ($('resetStorageBtn')) $('resetStorageBtn').onclick = function () {
+        if ('caches' in window) caches.keys().then(function (ns) { ns.forEach(function (n) { caches.delete(n); }); });
+        if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
+        setTimeout(function () { window.location.reload(); }, 150);
+      };
+      if ($('ownerSignInBtn')) $('ownerSignInBtn').onclick = function () {
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(5,7,10,0.88);display:flex;align-items:center;justify-content:center;padding:16px;z-index:3000;';
+        ov.innerHTML =
+          '<div style="background:#131a24;border:2px solid #f39c12;border-radius:12px;max-width:480px;width:100%;padding:20px;color:#fff;display:flex;flex-direction:column;gap:12px;">' +
+            '<div style="font-size:1.15rem;font-weight:900;color:#f39c12;">Cloud Sign-In Not Built on This Host</div>' +
+            '<div style="font-size:0.93rem;line-height:1.45;color:#cbd5e1;">The public sets below loaded from <code>sets.json</code>, but the compiled cloud module (<code>./assets/console.js</code>) is missing on this static host.</div>' +
+            '<div style="font-size:0.9rem;line-height:1.45;color:#cbd5e1;">On GitHub Pages, open repository <strong>Settings → Pages → Source</strong>, choose <strong>GitHub Actions</strong> (workflow included in <code>.github/workflows/deploy-pages.yml</code>), and ensure <code>' + (window.location.hostname || 'this domain') + '</code> is in Firebase Auth Authorized Domains.</div>' +
+            '<button type="button" id="closeFallbackNoticeBtn" style="background:#00bcd4;color:#05131a;border:none;border-radius:8px;padding:10px 14px;font-weight:900;cursor:pointer;">OK</button>' +
+          '</div>';
+        document.body.appendChild(ov);
+        $('closeFallbackNoticeBtn').onclick = function () { ov.remove(); };
+      };
+
+      fetch('./sets.json?v=' + Date.now())
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          sets = Array.isArray(data) ? data : [];
+          var row = $('setSwitcherRow');
+          if (!row) return;
+          row.innerHTML = '';
+          sets.forEach(function (s) {
+            var btn = document.createElement('button');
+            btn.className = 'btn-set-switch';
+            btn.innerText = s.label;
+            btn.onclick = function () { openSet(s); };
+            row.appendChild(btn);
+          });
+          var targetSet = new URLSearchParams(window.location.search).get('set');
+          if (targetSet) {
+            var m = sets.find(function (s) { return String(s.id) === targetSet; });
+            if (m) openSet(m);
+          }
+        })
+        .catch(function () {
+          var row = $('setSwitcherRow');
+          if (row) row.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:18px;color:#ffb4a9;">Unable to load sets.json.</div>';
+        });
+    }
+
+    var modScript = document.getElementById('consoleModuleScript');
+    if (modScript) modScript.addEventListener('error', bootStaticFallback);
+    window.addEventListener('load', function () {
+      setTimeout(bootStaticFallback, 2500);
+    });
+  })();
+</script>
 </body>
 </html>

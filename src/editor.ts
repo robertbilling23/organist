@@ -1,6 +1,8 @@
 import type { User } from 'firebase/auth';
 import {
   checkIsAdminUser,
+  consumeAuthRedirectResult,
+  FIREBASE_PROJECT_ID,
   OWNER_EMAIL,
   signInWithGoogle,
   signOutUser,
@@ -31,6 +33,13 @@ import {
   type TrackButton,
   type TrackColor
 } from './types';
+
+declare global {
+  interface Window {
+    __lodgeMusicEditorBooted?: boolean;
+  }
+}
+window.__lodgeMusicEditorBooted = true;
 
 let currentUser: User | null = null;
 let isAdmin = false;
@@ -181,6 +190,7 @@ function renderAuthGate(): void {
       <div class="auth-card">
         <h2>Owner Sign-In Required</h2>
         <p>Anyone can use the public Lodge Music player without an account. Sign in with the owner Google account (<strong>${OWNER_EMAIL}</strong>) to edit buttons, colors, order, or migrate your configuration.</p>
+        <div id="editorAuthErrorBox" style="display:none;background:rgba(243,156,18,0.12);border:1px solid var(--cue-gold);border-radius:8px;padding:12px;text-align:left;font-size:0.88rem;line-height:1.45;color:#e2e8f0;"></div>
         <div class="auth-actions">
           <button type="button" class="btn-utility btn-primary" id="btnGoogleSignIn">Sign in with Google</button>
           <a href="./" class="btn-utility btn-secondary">◀ Back to Public Player</a>
@@ -188,16 +198,36 @@ function renderAuthGate(): void {
       </div>
     `;
     userStatus.innerHTML = '';
-    byId<HTMLButtonElement>('btnGoogleSignIn')?.addEventListener('click', async () => {
+    const signInBtn = byId<HTMLButtonElement>('btnGoogleSignIn');
+    signInBtn?.addEventListener('click', async () => {
+      signInBtn.disabled = true;
+      signInBtn.textContent = 'Signing in...';
       try {
         await signInWithGoogle();
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Sign-in cancelled.';
+        const errBox = byId<HTMLDivElement>('editorAuthErrorBox');
         if (msg.includes('auth/unauthorized-domain')) {
-          showToast(`Add "${window.location.hostname}" to Firebase Auth Authorized Domains to sign in from here.`, 'error');
+          const host = window.location.hostname || window.location.host;
+          if (errBox) {
+            errBox.style.display = 'block';
+            errBox.innerHTML = `
+              <strong style="color:var(--cue-gold);">Domain "${host}" is not authorized yet.</strong><br>
+              Add <code>${host}</code> under <strong>Authorized domains</strong> in
+              <a href="https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings" target="_blank" rel="noopener noreferrer" style="color:var(--active-blue);font-weight:700;">Firebase Authentication Settings</a>.
+            `;
+          }
+          showToast(`Add "${host}" to Firebase Auth Authorized Domains.`, 'error');
         } else {
+          if (errBox) {
+            errBox.style.display = 'block';
+            errBox.textContent = msg;
+          }
           showToast(msg, 'error');
         }
+      } finally {
+        signInBtn.disabled = false;
+        signInBtn.textContent = 'Sign in with Google';
       }
     });
     return;
@@ -1042,6 +1072,10 @@ function wireEventListeners(): void {
 
 window.addEventListener('DOMContentLoaded', () => {
   wireEventListeners();
+  void consumeAuthRedirectResult().catch((err) => {
+    const msg = err instanceof Error ? err.message : 'Sign-in redirect failed.';
+    showToast(msg, 'error');
+  });
   subscribeAuth(async (user) => {
     currentUser = user;
     isAdmin = await checkIsAdminUser(user);

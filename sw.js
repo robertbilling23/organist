@@ -1,16 +1,19 @@
-const CACHE_NAME = 'lodge-music-v58';
+const CACHE_NAME = 'lodge-music-v59';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './assets/console.js'
+  './assets/console.js',
+  './assets/store.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(CORE_ASSETS);
+      return Promise.allSettled(
+        CORE_ASSETS.map((asset) => cache.add(asset))
+      );
     }).then(() => self.skipWaiting())
   );
 });

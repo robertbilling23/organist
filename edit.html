@@ -679,6 +679,27 @@
 
 <div class="editor-toast" id="editorToast"></div>
 
-<script type="module" src="./assets/editor.js"></script>
+<script type="module" src="./assets/editor.js" id="editorModuleScript"></script>
+<script>
+  (function () {
+    function showMissingBuildGate() {
+      if (window.__lodgeMusicEditorBooted) return;
+      var gate = document.getElementById('authGatePanel');
+      if (!gate) return;
+      gate.style.display = 'flex';
+      gate.innerHTML =
+        '<div class="auth-card">' +
+          '<h2>Compiled App Bundle Missing</h2>' +
+          '<p>This host is serving raw repository files without the compiled <code>./assets/editor.js</code> bundle. On GitHub Pages, open your repository <strong>Settings → Pages → Source</strong> and select <strong>GitHub Actions</strong> (workflow included in <code>.github/workflows/deploy-pages.yml</code>), then re-run or re-sync.</p>' +
+          '<div class="auth-actions">' +
+            '<a href="./" class="btn-utility btn-primary">◀ Back to Public Player</a>' +
+          '</div>' +
+        '</div>';
+    }
+    var scriptEl = document.getElementById('editorModuleScript');
+    if (scriptEl) scriptEl.addEventListener('error', showMissingBuildGate);
+    window.addEventListener('load', function () { setTimeout(showMissingBuildGate, 2500); });
+  })();
+</script>
 </body>
 </html>
