@@ -1,0 +1,164 @@
+[
+  {
+    "title": "30 SMIB",
+    "file": "audio/MM/30 Open 3rd SMIB.mp3",
+    "cue": "Play SMIB during the opening of the Third Degree.",
+    "color": "yellow"
+  },
+  {
+    "title": "31 Open 3rd TB",
+    "file": "audio/MM/31 Open 3rd TB.mp3",
+    "cue": "Play during the opening of the Third Degree Tracing Board.",
+    "color": "darkblue"
+  },
+  {
+    "title": "32 All Glory",
+    "file": "audio/MM/32 Open 3rd AllGlory.mp3",
+    "cue": "Play 'All Glory to the Most High' during the 3rd degree opening.",
+    "color": "blue"
+  },
+  {
+    "title": "Grave Cloth",
+    "file": "audio/MM/32b GraveCloth_Largo from Xerxes.mp3",
+    "cue": "Play Handel's Largo from Xerxes for the Grave Cloth sequence.",
+    "color": "purple"
+  },
+  {
+    "title": "33 Door to Kneeling",
+    "file": "audio/MM/33 door to kneeling stool.mp3",
+    "cue": "Play as candidate moves from the door to the kneeling stool.",
+    "color": "darkblue"
+  },
+  {
+    "title": "34 SMIB",
+    "file": "audio/MM/34 SMIB.mp3",
+    "cue": "Play SMIB after prayer.",
+    "color": "yellow"
+  },
+  {
+    "title": "35.1 Kneeling to WM",
+    "file": "audio/MM/35.1 kneeling to WM.mp3",
+    "cue": "Play as candidate moves from kneeling stool to WM.",
+    "color": "blue"
+  },
+  {
+    "title": "35.2 WM to JW",
+    "file": "audio/MM/35.2 WM to JW.mp3",
+    "cue": "Play as candidate moves from WM to JW.",
+    "color": "blue"
+  },
+  {
+    "title": "35.3 JW to SW",
+    "file": "audio/MM/35.3 JW to SW.mp3",
+    "cue": "Play as candidate moves from JW to SW.",
+    "color": "blue"
+  },
+  {
+    "title": "35.4 SW to WM",
+    "file": "audio/MM/35.4 SW to WM.mp3",
+    "cue": "Play as candidate moves from SW to WM.",
+    "color": "green"
+  },
+  {
+    "title": "35.5 WM to JW",
+    "file": "audio/MM/35.5 WM to JW.mp3",
+    "cue": "Play as candidate moves from WM to JW on the subsequent circuit.",
+    "color": "green"
+  },
+  {
+    "title": "35.6 JW to SW",
+    "file": "audio/MM/35.6 JW to SW.mp3",
+    "cue": "Play as candidate moves from JW to SW on the subsequent circuit.",
+    "color": "green"
+  },
+  {
+    "title": "36.1 Properly Prepared to WM",
+    "file": "audio/MM/36.1 Properly Prepared to WM.mp3",
+    "cue": "Play when candidate is reported properly prepared and passes to WM.",
+    "color": "purple"
+  },
+  {
+    "title": "36.2 WM to JW",
+    "file": "audio/MM/36.2 WM to JW.mp3",
+    "cue": "Play as candidate passes from WM to JW.",
+    "color": "purple"
+  },
+  {
+    "title": "36.3 JW to SW",
+    "file": "audio/MM/36.3 JW to SW.mp3",
+    "cue": "Play as candidate passes from JW to SW.",
+    "color": "purple"
+  },
+  {
+    "title": "37 Kneel",
+    "file": "audio/MM/37 Kneel.mp3",
+    "cue": "Play when candidate kneels for the obligation.",
+    "color": "yellow"
+  },
+  {
+    "title": "38 Keep Thy",
+    "file": "audio/MM/38 Keep Thy.mp3",
+    "cue": "Play during the solemn support segment of the obligation.",
+    "color": "yellow"
+  },
+  {
+    "title": "39 Laid on Ground",
+    "file": "audio/MM/39 After Laid on Ground.mp3",
+    "cue": "Play immediately after the candidate is laid on the ground.",
+    "color": "purple"
+  },
+  {
+    "title": "40 JW Walks Around",
+    "file": "audio/MM/40 JW walks around.mp3",
+    "cue": "Play as the Junior Warden perambulates.",
+    "color": "blue"
+  },
+  {
+    "title": "41 SW Walks Around",
+    "file": "audio/MM/41 SW walks around.mp3",
+    "cue": "Play as the Senior Warden perambulates.",
+    "color": "blue"
+  },
+  {
+    "title": "42 Now Make Trial",
+    "file": "audio/MM/42 after now make trial.mp3",
+    "cue": "Play after the command to 'now make trial'.",
+    "color": "yellow"
+  },
+  {
+    "title": "43 After EOM",
+    "file": "audio/MM/43 after EOM.mp3",
+    "cue": "Play following the completion of the Exhortation / Onward March.",
+    "color": "blue"
+  },
+  {
+    "title": "44 After Badge Extension",
+    "file": "audio/MM/44 after badge extension.mp3",
+    "cue": "Play immediately following the Master Mason badge extension address.",
+    "color": "green"
+  },
+  {
+    "title": "45 After WTs",
+    "file": "audio/MM/45 after WTs.mp3",
+    "cue": "Play after the Working Tools address is completed.",
+    "color": "orange"
+  },
+  {
+    "title": "46.1 After Final",
+    "file": "audio/MM/46.1 after final.mp3",
+    "cue": "Play after the final traditional charge is completed.",
+    "color": "blue"
+  },
+  {
+    "title": "46.2 WM to Saluting Base",
+    "file": "audio/MM/46.2 from WM to Saluting Base.mp3",
+    "cue": "Play as candidate moves from WM to the saluting base.",
+    "color": "green"
+  },
+  {
+    "title": "46.3 Leaving Lodge Room",
+    "file": "audio/MM/46.3 Heads out the door.mp3",
+    "cue": "Play as the candidate retiring leaves the lodge room.",
+    "color": "red"
+  }
+]

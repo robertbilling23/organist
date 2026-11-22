@@ -1,0 +1,21 @@
+{
+  "short_name": "robLodgeMusic",
+  "name": "Lodge Music",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/fluency/192/000000/audio-wave.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://img.icons8.com/fluency/512/000000/audio-wave.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "id": "./index.html",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait"
+}
+

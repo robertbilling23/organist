@@ -1,0 +1,13 @@
+[
+  {
+    "id": "track1",
+    "title": "So Mote It Be",
+    "color": "yellow",
+    "file": "audio/1-Open-1st-SMIB-Faster.mp3",
+    "cue": "When the Chaplain says HARMONY",
+    "lyrics": [
+      "The lodge being duly formed, before it is declared",
+      "open let us invoke a blessing from the GAOTU on all our undertakings. May our labours, thus begun in order, be conducted in peace, and closed in harmony."
+    ]
+  }
+]
