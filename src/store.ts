@@ -120,6 +120,7 @@ export function subscribeToTracks(
           cue: typeof d.cue === 'string' ? d.cue : '',
           lyrics: Array.isArray(d.lyrics) ? d.lyrics.filter((l): l is string => typeof l === 'string') : [],
           order: typeof d.order === 'number' ? d.order : 0,
+          lockedTop: d.lockedTop === true,
           createdAt: d.createdAt,
           updatedAt: d.updatedAt
         };
@@ -174,6 +175,7 @@ export async function fetchTracksOnce(setId: string): Promise<TrackButton[]> {
         cue: typeof d.cue === 'string' ? d.cue : '',
         lyrics: Array.isArray(d.lyrics) ? d.lyrics.filter((l): l is string => typeof l === 'string') : [],
         order: typeof d.order === 'number' ? d.order : 0,
+        lockedTop: d.lockedTop === true,
         createdAt: d.createdAt,
         updatedAt: d.updatedAt
       };
@@ -299,6 +301,7 @@ export async function createTrack(
     cue: string;
     lyrics: string[];
     order: number;
+    lockedTop?: boolean;
   }
 ): Promise<TrackButton> {
   const id = input.id && BLUEPRINT_LIMITS.ID_REGEX.test(input.id)
@@ -312,6 +315,7 @@ export async function createTrack(
   const cleanCue = clampString(input.cue, BLUEPRINT_LIMITS.TRACK_CUE_MAX);
   const cleanLyrics = normalizeLyrics(input.lyrics);
   const cleanOrder = normalizeOrder(input.order);
+  const cleanLockedTop = Boolean(input.lockedTop);
 
   try {
     await setDoc(doc(db, 'sets', setId, 'tracks', id), {
@@ -323,6 +327,7 @@ export async function createTrack(
       cue: cleanCue,
       lyrics: cleanLyrics,
       order: cleanOrder,
+      lockedTop: cleanLockedTop,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -334,7 +339,8 @@ export async function createTrack(
       file: cleanFile,
       cue: cleanCue,
       lyrics: cleanLyrics,
-      order: cleanOrder
+      order: cleanOrder,
+      lockedTop: cleanLockedTop
     };
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
@@ -344,7 +350,7 @@ export async function createTrack(
 export async function updateTrack(
   setId: string,
   trackId: string,
-  updates: Partial<Pick<TrackButton, 'title' | 'color' | 'file' | 'cue' | 'lyrics' | 'order'>>
+  updates: Partial<Pick<TrackButton, 'title' | 'color' | 'file' | 'cue' | 'lyrics' | 'order' | 'lockedTop'>>
 ): Promise<void> {
   const path = `sets/${setId}/tracks/${trackId}`;
   const payload: Record<string, unknown> = {
@@ -376,6 +382,9 @@ export async function updateTrack(
   }
   if (updates.order !== undefined) {
     payload.order = normalizeOrder(updates.order);
+  }
+  if (updates.lockedTop !== undefined) {
+    payload.lockedTop = Boolean(updates.lockedTop);
   }
 
   try {
@@ -451,6 +460,7 @@ export async function importTracksIntoSet(
           cue: clampString(raw.cue, BLUEPRINT_LIMITS.TRACK_CUE_MAX, ''),
           lyrics: normalizeLyrics(raw.lyrics),
           order,
+          lockedTop: raw.lockedTop === true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -579,6 +589,7 @@ export async function migrateLegacyConfiguration(options: {
           cue: clampString(raw.cue, BLUEPRINT_LIMITS.TRACK_CUE_MAX, ''),
           lyrics: normalizeLyrics(raw.lyrics),
           order: normalizeOrder(idx),
+          lockedTop: raw.lockedTop === true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -602,6 +613,7 @@ export async function migrateLegacyConfiguration(options: {
               cue: clampString(raw.cue, BLUEPRINT_LIMITS.TRACK_CUE_MAX, ''),
               lyrics: normalizeLyrics(raw.lyrics),
               order: normalizeOrder(idx),
+              lockedTop: raw.lockedTop === true,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });

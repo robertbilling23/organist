@@ -93,6 +93,10 @@
           "type": "number",
           "description": "Zero-based display order index within the set."
         },
+        "lockedTop": {
+          "type": "boolean",
+          "description": "Optional flag to keep this button locked at the top of the console grid so it does not scroll."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",

@@ -506,6 +506,18 @@
             border-color: var(--active-ring) !important;
             box-shadow: var(--active-ring-shadow);
         }
+        .preview-locked-divider {
+            grid-column: 1 / -1;
+            border-bottom: 1.5px solid var(--panel-border);
+            margin: 2px 0;
+        }
+        .track-locked-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--cue-gold);
+            margin-left: 6px;
+        }
         .color-darkblue { background: var(--btn-darkblue); border-color: var(--btn-darkblue-border); }
         .color-blue     { background: var(--btn-blue);     border-color: var(--btn-blue-border); }
         .color-yellow   { background: var(--btn-yellow);   border-color: var(--btn-yellow-border); }
@@ -542,6 +554,27 @@
             resize: vertical;
             min-height: 110px;
             line-height: 1.4;
+        }
+        .checkbox-inline-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface-input);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-bright);
+            font-size: 0.94rem;
+            font-weight: 600;
+        }
+        .checkbox-inline-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--active-blue);
+            cursor: pointer;
+            flex-shrink: 0;
         }
 
         .color-swatch-grid {
@@ -828,6 +861,13 @@
                 <div class="form-group">
                     <label>Button Color</label>
                     <div class="color-swatch-grid" id="colorSwatchGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-inline-label" for="editLockedTop">
+                        <input type="checkbox" id="editLockedTop">
+                        <span>Lock button at top (stays pinned, does not scroll)</span>
+                    </label>
                 </div>
 
                 <div class="form-group">

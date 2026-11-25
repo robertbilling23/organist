@@ -558,9 +558,7 @@ function loadTrack(index: number): void {
   stopAudioEngine();
 
   if (tracks.length === 0 || !tracks[index]) {
-    const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
     const cueEl = byId<HTMLSpanElement>('cueText');
-    if (ticker) ticker.innerText = 'None';
     if (cueEl) cueEl.innerText = 'No buttons configured in this set yet.';
     buildStaticTextPanel([]);
     return;
@@ -580,7 +578,6 @@ function loadTrack(index: number): void {
   trackDuration = cachedAsset ? cachedAsset.duration : 0;
   pausedTime = 0;
 
-  const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
   const titleEl = byId<HTMLSpanElement>('trackTitle');
   const filenameEl = byId<HTMLSpanElement>('trackFilenameReadout');
   const cueEl = byId<HTMLSpanElement>('cueText');
@@ -589,7 +586,6 @@ function loadTrack(index: number): void {
   const playBtn = byId<HTMLButtonElement>('playBtn');
   const fadeBtn = byId<HTMLButtonElement>('fadeBtn');
 
-  if (ticker) ticker.innerText = track.title;
   if (titleEl) titleEl.innerText = track.title;
   if (filenameEl) filenameEl.innerText = track.file.split('/').pop() || track.file;
   if (cueEl) cueEl.innerText = track.cue || 'No special cues assigned.';
@@ -785,14 +781,27 @@ function handleTrackSelection(index: number): void {
 }
 
 function buildPlaylistGrid(forceDisabledState: boolean): void {
+  const lockedSection = byId<HTMLDivElement>('playlistLockedSection');
+  const lockedGrid = byId<HTMLDivElement>('lockedPlaylistGrid');
+  const scrollSection = byId<HTMLDivElement>('playlistScrollSection');
   const grid = byId<HTMLDivElement>('playlistGrid');
   if (!grid) return;
+
+  if (lockedGrid) lockedGrid.innerHTML = '';
   grid.innerHTML = '';
 
   if (tracks.length === 0) {
+    if (lockedSection) {
+      lockedSection.style.display = 'none';
+      lockedSection.classList.remove('has-scroll-below');
+    }
+    if (scrollSection) scrollSection.style.display = 'block';
     grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding: 18px; color: var(--text-dim);">No buttons in this set yet.${canEditActiveSet() ? ' Tap ✏️ Edit below or 🎛️ Studio above to add buttons.' : ''}</div>`;
     return;
   }
+
+  let lockedCount = 0;
+  let scrollCount = 0;
 
   tracks.forEach((track, index) => {
     const chip = document.createElement('div');
@@ -863,8 +872,22 @@ function buildPlaylistGrid(forceDisabledState: boolean): void {
       });
     }
 
-    grid.appendChild(chip);
+    if (track.lockedTop && lockedGrid) {
+      lockedGrid.appendChild(chip);
+      lockedCount++;
+    } else {
+      grid.appendChild(chip);
+      scrollCount++;
+    }
   });
+
+  if (lockedSection) {
+    lockedSection.style.display = lockedCount > 0 ? 'block' : 'none';
+    lockedSection.classList.toggle('has-scroll-below', lockedCount > 0 && scrollCount > 0);
+  }
+  if (scrollSection) {
+    scrollSection.style.display = scrollCount > 0 ? 'block' : 'none';
+  }
 }
 
 function openOperationsModal(): void {
@@ -1229,7 +1252,8 @@ async function loadLocalFallbackTracks(set: SetConfig): Promise<TrackButton[]> {
       file: t.file || 'audio/filename.mp3',
       cue: t.cue || '',
       lyrics: normalizeLyrics(t.lyrics),
-      order: idx
+      order: idx,
+      lockedTop: t.lockedTop === true
     }));
 }
 
@@ -1253,7 +1277,6 @@ function navigateToHomeScreen(): void {
   tracks = [];
   currentTrackIndex = 0;
 
-  const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
   const titleEl = byId<HTMLSpanElement>('trackTitle');
   const filenameEl = byId<HTMLSpanElement>('trackFilenameReadout');
   const errNotice = byId<HTMLSpanElement>('trackErrorNotice');
@@ -1261,7 +1284,6 @@ function navigateToHomeScreen(): void {
   const trackTime = byId<HTMLSpanElement>('trackTime');
   const cueEl = byId<HTMLSpanElement>('cueText');
 
-  if (ticker) ticker.innerText = 'None';
   if (titleEl) titleEl.innerText = '---';
   if (filenameEl) filenameEl.innerText = 'no_file.mp3';
   if (errNotice) {
@@ -1348,11 +1370,9 @@ function canEditActiveSet(): boolean {
 
 function syncPlayModeDisplay(active: TrackButton | undefined): void {
   if (!active) return;
-  const ticker = byId<HTMLSpanElement>('tickerTrackTitle');
   const titleEl = byId<HTMLSpanElement>('trackTitle');
   const filenameEl = byId<HTMLSpanElement>('trackFilenameReadout');
   const cueElNow = byId<HTMLSpanElement>('cueText');
-  if (ticker) ticker.innerText = active.title;
   if (titleEl) titleEl.innerText = active.title;
   if (filenameEl) filenameEl.innerText = active.file.split('/').pop() || active.file;
   if (cueElNow) cueElNow.innerText = active.cue || 'No special cues assigned.';
@@ -1602,14 +1622,28 @@ function restoreChipFromSavedTrack(index: number): void {
   chip.style.fontSize = words.some((word) => word.length > 9) ? '1.05rem' : '';
 }
 
+function getAdjacentSameGroupIndex(index: number, direction: -1 | 1): number {
+  const current = tracks[index];
+  if (!current) return -1;
+  const isLocked = Boolean(current.lockedTop);
+  let cursor = index + direction;
+  while (cursor >= 0 && cursor < tracks.length) {
+    if (Boolean(tracks[cursor].lockedTop) === isLocked) {
+      return cursor;
+    }
+    cursor += direction;
+  }
+  return -1;
+}
+
 function updateInlineReorderButtons(): void {
   const earlierBtn = byId<HTMLButtonElement>('btnInlineMoveEarlier');
   const laterBtn = byId<HTMLButtonElement>('btnInlineMoveLater');
   if (earlierBtn) {
-    earlierBtn.disabled = isReorderingInline || tracks.length <= 1 || currentTrackIndex <= 0;
+    earlierBtn.disabled = isReorderingInline || tracks.length <= 1 || getAdjacentSameGroupIndex(currentTrackIndex, -1) < 0;
   }
   if (laterBtn) {
-    laterBtn.disabled = isReorderingInline || tracks.length <= 1 || currentTrackIndex >= tracks.length - 1;
+    laterBtn.disabled = isReorderingInline || tracks.length <= 1 || getAdjacentSameGroupIndex(currentTrackIndex, 1) < 0;
   }
 }
 
@@ -1675,6 +1709,7 @@ function syncInlineEditorToCurrentTrack(): void {
   const emptyState = byId<HTMLDivElement>('inlineEmptyState');
   const formBody = byId<HTMLDivElement>('inlineEditorFormBody');
   const titleInput = byId<HTMLInputElement>('inlineEditTitle');
+  const lockedTopInput = byId<HTMLInputElement>('inlineEditLockedTop');
   const fileInput = byId<HTMLInputElement>('inlineEditFile');
   const picker = byId<HTMLSelectElement>('inlineAudioPicker');
   const cueInput = byId<HTMLInputElement>('inlineEditCue');
@@ -1699,6 +1734,7 @@ function syncInlineEditorToCurrentTrack(): void {
   if (heading) heading.textContent = `Edit #${currentTrackIndex + 1}: ${track.title}`;
 
   if (titleInput) titleInput.value = track.title;
+  if (lockedTopInput) lockedTopInput.checked = Boolean(track.lockedTop);
   if (fileInput) fileInput.value = track.file;
   if (picker) picker.value = availableConsoleAudioFiles.includes(track.file) ? track.file : '';
   if (cueInput) cueInput.value = track.cue;
@@ -1733,6 +1769,7 @@ async function saveInlineTrackEdits(): Promise<boolean> {
   const title = (byId<HTMLInputElement>('inlineEditTitle')?.value || '')
     .trim()
     .slice(0, BLUEPRINT_LIMITS.TRACK_TITLE_MAX);
+  const lockedTop = Boolean(byId<HTMLInputElement>('inlineEditLockedTop')?.checked);
   const file = (byId<HTMLInputElement>('inlineEditFile')?.value || '')
     .trim()
     .slice(0, BLUEPRINT_LIMITS.TRACK_FILE_MAX);
@@ -1761,14 +1798,16 @@ async function saveInlineTrackEdits(): Promise<boolean> {
       color,
       file,
       cue,
-      lyrics
+      lyrics,
+      lockedTop
     });
     if (fileChanged) {
       delete audioErrors[file];
     }
-    tracks[currentTrackIndex] = { ...track, title, color, file, cue, lyrics };
-    restoreChipFromSavedTrack(currentTrackIndex);
+    tracks[currentTrackIndex] = { ...track, title, color, file, cue, lyrics, lockedTop };
+    buildPlaylistGrid(false);
     syncPlayModeDisplay(tracks[currentTrackIndex]);
+    updateInlineReorderButtons();
     const heading = byId<HTMLSpanElement>('inlineEditorHeading');
     if (heading) heading.textContent = `Edit #${currentTrackIndex + 1}: ${title}`;
     setInlineSaveStatus('saved');
@@ -1977,6 +2016,9 @@ function initConsole(): void {
     applyInlineChipPreview();
     setInlineSaveStatus('dirty');
   });
+  byId<HTMLInputElement>('inlineEditLockedTop')?.addEventListener('change', () => {
+    setInlineSaveStatus('dirty');
+  });
   byId<HTMLInputElement>('inlineEditFile')?.addEventListener('input', () => {
     const picker = byId<HTMLSelectElement>('inlineAudioPicker');
     const val = byId<HTMLInputElement>('inlineEditFile')?.value || '';
@@ -2009,10 +2051,12 @@ function initConsole(): void {
     syncInlineEditorToCurrentTrack();
   });
   byId<HTMLButtonElement>('btnInlineMoveEarlier')?.addEventListener('click', () => {
-    void reorderInlineTracks(currentTrackIndex, currentTrackIndex - 1);
+    const target = getAdjacentSameGroupIndex(currentTrackIndex, -1);
+    if (target >= 0) void reorderInlineTracks(currentTrackIndex, target);
   });
   byId<HTMLButtonElement>('btnInlineMoveLater')?.addEventListener('click', () => {
-    void reorderInlineTracks(currentTrackIndex, currentTrackIndex + 1);
+    const target = getAdjacentSameGroupIndex(currentTrackIndex, 1);
+    if (target >= 0) void reorderInlineTracks(currentTrackIndex, target);
   });
   byId<HTMLButtonElement>('btnInlineAddTrack')?.addEventListener('click', () => {
     requestGuardedEditAction(() => {

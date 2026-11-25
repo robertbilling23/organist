@@ -52,6 +52,7 @@ export interface TrackButton {
   cue: string;
   lyrics: string[];
   order: number;
+  lockedTop?: boolean;
   createdAt?: unknown;
   updatedAt?: unknown;
 }
@@ -69,4 +70,5 @@ export interface LegacyTrackEntry {
   file?: string;
   cue?: string;
   lyrics?: string[];
+  lockedTop?: boolean;
 }

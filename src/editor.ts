@@ -406,18 +406,29 @@ function renderPreviewGrid(): void {
     return;
   }
 
-  tracksList.forEach((track) => {
+  const lockedTracks = tracksList.filter((t) => t.lockedTop);
+  const scrollTracks = tracksList.filter((t) => !t.lockedTop);
+
+  const appendChip = (track: TrackButton): void => {
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = `preview-chip color-${track.color}${track.id === selectedTrackId ? ' selected' : ''}`;
-    chip.textContent = track.title;
+    chip.textContent = track.lockedTop ? `📌 ${track.title}` : track.title;
     const words = track.title.split(' ');
     if (words.some((w) => w.length > 9)) chip.style.fontSize = '0.9rem';
     chip.onclick = () => {
       selectTrackForEditing(track.id);
     };
     previewGrid.appendChild(chip);
-  });
+  };
+
+  lockedTracks.forEach(appendChip);
+  if (lockedTracks.length > 0 && scrollTracks.length > 0) {
+    const divider = document.createElement('div');
+    divider.className = 'preview-locked-divider';
+    previewGrid.appendChild(divider);
+  }
+  scrollTracks.forEach(appendChip);
 }
 
 function renderTrackList(): void {
@@ -448,7 +459,7 @@ function renderTrackList(): void {
         <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
         <span class="color-swatch-dot color-${track.color}"></span>
         <div class="track-meta">
-          <span class="track-title-text"><span class="order-num">#${idx + 1}</span> ${escapeHtml(track.title)}</span>
+          <span class="track-title-text"><span class="order-num">#${idx + 1}</span> ${escapeHtml(track.title)}${track.lockedTop ? '<span class="track-locked-badge">📌 Locked Top</span>' : ''}</span>
           <span class="track-file-subtext">${escapeHtml(track.file)}</span>
         </div>
       </div>
@@ -534,12 +545,14 @@ function populatePropertiesForm(track: TrackButton): void {
   }
 
   const titleInput = byId<HTMLInputElement>('editTitle');
+  const lockedTopInput = byId<HTMLInputElement>('editLockedTop');
   const fileInput = byId<HTMLInputElement>('editFile');
   const cueInput = byId<HTMLInputElement>('editCue');
   const lyricsInput = byId<HTMLTextAreaElement>('editLyrics');
   const quickSelect = byId<HTMLSelectElement>('audioFilePickerSelect');
 
   if (titleInput) titleInput.value = track.title;
+  if (lockedTopInput) lockedTopInput.checked = Boolean(track.lockedTop);
   if (fileInput) fileInput.value = track.file;
   if (cueInput) cueInput.value = track.cue;
   if (lyricsInput) lyricsInput.value = (track.lyrics || []).join('\n');
@@ -559,10 +572,12 @@ function disablePropertiesPanel(): void {
     panel.style.pointerEvents = 'none';
   }
   const titleInput = byId<HTMLInputElement>('editTitle');
+  const lockedTopInput = byId<HTMLInputElement>('editLockedTop');
   const fileInput = byId<HTMLInputElement>('editFile');
   const cueInput = byId<HTMLInputElement>('editCue');
   const lyricsInput = byId<HTMLTextAreaElement>('editLyrics');
   if (titleInput) titleInput.value = '';
+  if (lockedTopInput) lockedTopInput.checked = false;
   if (fileInput) fileInput.value = '';
   if (cueInput) cueInput.value = '';
   if (lyricsInput) lyricsInput.value = '';
@@ -615,6 +630,7 @@ async function saveCurrentTrackEdits(): Promise<void> {
   if (!activeSetId || !selectedTrackId) return;
 
   const title = (byId<HTMLInputElement>('editTitle')?.value || '').trim().slice(0, BLUEPRINT_LIMITS.TRACK_TITLE_MAX);
+  const lockedTop = Boolean(byId<HTMLInputElement>('editLockedTop')?.checked);
   const file = (byId<HTMLInputElement>('editFile')?.value || '').trim().slice(0, BLUEPRINT_LIMITS.TRACK_FILE_MAX);
   const cue = (byId<HTMLInputElement>('editCue')?.value || '').trim().slice(0, BLUEPRINT_LIMITS.TRACK_CUE_MAX);
   const lyricsText = byId<HTMLTextAreaElement>('editLyrics')?.value || '';
@@ -638,7 +654,8 @@ async function saveCurrentTrackEdits(): Promise<void> {
       color,
       file,
       cue,
-      lyrics
+      lyrics,
+      lockedTop
     });
     updateSaveIndicator('saved');
     showToast('Button saved to cloud!', 'success');
@@ -915,7 +932,8 @@ function handleDownloadCurrentSetJson(): void {
     color: t.color,
     file: t.file,
     cue: t.cue,
-    lyrics: t.lyrics
+    lyrics: t.lyrics,
+    ...(t.lockedTop ? { lockedTop: true } : {})
   }));
   const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1000,6 +1018,9 @@ function wireEventListeners(): void {
   byId<HTMLInputElement>('editTitle')?.addEventListener('input', (e) => {
     const val = (e.target as HTMLInputElement).value;
     updateButtonPreviewPill(val, getSelectedColorSwatch());
+    updateSaveIndicator('dirty');
+  });
+  byId<HTMLInputElement>('editLockedTop')?.addEventListener('change', () => {
     updateSaveIndicator('dirty');
   });
   byId<HTMLInputElement>('editFile')?.addEventListener('input', () => {
